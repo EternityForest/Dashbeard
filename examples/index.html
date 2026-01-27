@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" type="text/css" href="../styles/barrel.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashbeard - Interactive Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+        sans-serif;
+      background: #fafafa;
+    }
+
+    #root {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    ds-dashboard-renderer {
+      flex: 1;
+      overflow: auto;
+    }
+
+    .error-boundary {
+      padding: 20px;
+      background: #ffebee;
+      border: 1px solid #ef5350;
+      border-radius: 4px;
+      color: #c62828;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+  <script type="module">
+    // Import the dashboard renderer and dependencies
+    import '../src/components/dashboard-renderer';
+  </script>
+</head>
+
+<body>
+  <div id="root">
+    <ds-dashboard-renderer id="dashboard"></ds-dashboard-renderer>
+  </div>
+</body>
+
+
+<script type="module">
+    
+    // Example board definition (can be loaded from JSON file or API)
+    const exampleBoard = {
+      "metadata": {
+        "version": "1.0",
+        "name": "Simple Dashboard",
+        "description": "A simple example dashboard with interconnected widgets",
+        "author": "Dashbeard",
+        "created": "2024-01-16"
+      },
+      "rootComponent": {
+        "id": "main-layout",
+        "type": "flex-layout",
+        "config": {
+          "direction": "column",
+          "gap": "12px",
+          "label": "Dashboard Controls"
+        },
+        "children": [
+          {
+            "id": "counter-var",
+            "type": "variable",
+            "config": {
+              "defaultValue": 0,
+              "label": "Counter"
+            },
+            "layout": {
+              "grow": 0
+            }
+          },
+          {
+            "id": "slider-control-1",
+            "type": "slider",
+            "config": {
+              "defaultValue": 50,
+              "min": 0,
+              "max": 100,
+              "step": 5,
+              "label": "Intensity"
+            },
+            "layout": {
+              "grow": 1
+            }
+          },
+          {
+            "id": "slider-control-2",
+            "type": "slider",
+            "config": {
+              "defaultValue": 50,
+              "min": 0,
+              "max": 100,
+              "step": 5,
+              "label": "Intensity"
+            },
+            "layout": {
+              "grow": 1
+            }
+          }
+        ]
+      },
+      "bindings": [
+        {
+          "upstream": "counter-var.value",
+          "downstream": "slider-control-1.value"
+        },
+        {
+          "upstream": "counter-var.value",
+          "downstream": "slider-control-2.value"
+        }
+      ]
+    }
+      ;
+
+    // Load the board into the renderer
+    const dashboard = document.getElementById('dashboard');
+    dashboard.loadBoard(exampleBoard);
+    console.log(dashboard);
+  </script>
+</html>

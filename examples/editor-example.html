@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" type="text/css" href="../src/styles/barrel.css" />
+    <link rel="stylesheet" type="text/css" href="../src/styles/editor.css" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+    <title>Dashbeard Editor Example</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          system-ui, -apple-system, sans-serif;
+        background: #fafafa;
+      }
+
+      html, body, ds-dashboard-editor {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <ds-dashboard-editor id="editor"></ds-dashboard-editor>
+
+    <script type="module">
+      import { DashboardEditor } from '../src/editor/components/dashboard-editor.ts';
+      import { MemoryBackend } from '../src/editor/board-storage.ts';
+      import { EditorState } from '../src/editor/editor-state.ts';
+      import { registerBuiltInComponents } from '../src/editor/register-built-in-components.ts';
+
+      // Register built-in components with editor
+      registerBuiltInComponents();
+
+      // Create editor instance
+      const editor = document.getElementById('editor');
+
+      // Create memory backend for testing
+      const backend = new MemoryBackend();
+
+      // Sample board for testing
+      // Uses unified BoardDefinition format
+      const sampleBoard = {
+        id: 'test-board-1',
+        metadata: {
+          name: 'Example Dashboard',
+          version: '1.0.0',
+          created: new Date().toISOString(),
+          modified: new Date().toISOString(),
+        },
+        rootComponent: {
+          id: 'layout-1',
+          name: 'Main Layout',
+          type: 'flex-layout',
+          config: {
+            direction: 'column',
+            gap: "1rem",
+          },
+          children: [
+            {
+              id: 'comp-1',
+              name: 'My Slider',
+              type: 'slider',
+              config: {
+                min: 0,
+                max: 100,
+                defaultValue: 50,
+                label: 'Value',
+              },
+            },
+            {
+              id: 'comp-2',
+              name: 'My Variable',
+              type: 'variable',
+              config: {
+                defaultValue: 'Hello World',
+                label: 'Output',
+              },
+            },
+          ],
+        },
+        bindings: [],
+      };
+
+      // Configure editor
+      editor.backend = backend;
+
+      // Load sample board
+      (async () => {
+        await backend.create(sampleBoard);
+        editor.setBoard(sampleBoard);
+      })();
+
+      // Log state changes for debugging
+      window.editor = editor;
+      console.log('Editor loaded. Access via window.editor');
+      console.log('Use editor.editorState to access state');
+    </script>
+  </body>
+</html>

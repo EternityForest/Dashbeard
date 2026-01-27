@@ -1,0 +1,107 @@
+ds-dashboard-renderer{
+      display: block;
+      height: 100%;
+      width: 100%;
+      overflow: auto;
+      --component-grid-height: 4rem;
+    
+
+    .dashboard {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    .dashboard-header {
+      padding: 20px;
+      border-bottom: 1px solid;
+      background: var(--alt-control-bg);
+    }
+
+    .dashboard-header h1 {
+      margin: 0 0 8px 0;
+      font-size: 1.8em;
+      color: var(--control-fg);
+    }
+
+    .renderer-error {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      font-size: 1.1em;
+    }
+}
+
+ds-flex-layout{
+    .flex-layout {
+      display: flex;
+      height: 100%;
+      width: 100%;
+    }
+
+    .flex-container {
+      display: flex;
+      flex-direction: var(--direction, row);
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .flex-child {
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      overflow: auto;
+    }
+}
+
+
+.small-dashboard-widget-container {    
+    
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+    };
+
+    padding: 4px;
+    border: 1px solid;
+    border-radius: 4px;
+    background: var(--box-bg);
+    user-select: none;
+    height: var(--component-grid-height);
+    width: calc(var(--component-grid-height) * 2);
+}
+
+ds-variable{
+    input {
+      width: 100%;
+    }
+}
+
+ds-slider{
+
+    input[type='range'] {
+      width: 100%;
+      height: 6px;
+    
+    }
+
+    .slider-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85em;
+    }
+
+    .value {
+      font-weight: bold;
+      font-family: monospace;
+    }
+
+    .range {
+      opacity: 0.7;
+    }
+}
