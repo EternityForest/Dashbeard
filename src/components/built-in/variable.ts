@@ -45,18 +45,7 @@ export class VariableComponent extends DashboardComponent {
           default: 'Variable',
         },
       },
-    },
-    ports: {
-      inputs: [],
-      outputs: [
-        {
-          name: 'value',
-          direction: 'output',
-          type: 'string',
-          description: 'The stored value',
-        },
-      ],
-    },
+    }
   };
 
   /**

@@ -50,18 +50,7 @@ export class SliderComponent extends DashboardComponent {
           default: 'Value',
         },
       },
-    },
-    ports: {
-      outputs: [],
-      inputs: [
-        {
-          name: 'value',
-          direction: 'input',
-          type: 'number',
-          description: 'Current slider value',
-        },
-      ],
-    },
+    }
   };
 
   /**

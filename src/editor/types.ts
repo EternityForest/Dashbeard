@@ -66,10 +66,6 @@ export interface ComponentTypeSchema {
   description?: string;
   icon?: string;
   configSchema: ConfigSchema;
-  ports: {
-    inputs: PortSchema[];
-    outputs: PortSchema[];
-  };
 }
 
 /**

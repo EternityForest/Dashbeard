@@ -37,11 +37,7 @@ export class FlexLayoutComponent extends DashboardComponent {
           default: '6rem',
         },
       },
-    },
-    ports: {
-      inputs: [],
-      outputs: [],
-    },
+    }
   };
 
   /**

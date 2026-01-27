@@ -25,10 +25,6 @@ export class DashboardComponent extends LitElement {
     configSchema: {
       type: 'object',
       properties: {},
-    },
-    ports: {
-      inputs: [],
-      outputs: [],
     }
   }
 
