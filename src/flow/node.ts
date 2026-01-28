@@ -67,7 +67,7 @@ export class Node {
 
   addPort(port: Port): Port {
     port.parentNode = this;
-    if (port.isOutput) {
+    if (!port.isOutput) {
       this.inputPorts.set(port.name, port);
     } else {
       this.outputPorts.set(port.name, port);

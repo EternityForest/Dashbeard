@@ -399,15 +399,23 @@ export class BindingsEditor extends LitElement {
       return;
     }
 
+    const newBinding: BindingDefinition = {
+      id: `binding-${Date.now()}`,
+      fromPort: fromPort,
+      toPort: toPort,
+      filters: filters
+    }
     // Create in runtime first
     const runtime = this.getRuntime();
     if (runtime) {
       try {
         // For now, create binding without filters in runtime
         // Filter wiring will happen when the full binding is created
-        await runtime.getGraph().addBinding(fromPort, toPort);
+        await runtime.getGraph().loadBinding(newBinding);
+        board.bindings.push(newBinding);
+        
       } catch (err) {
-        alert(`Failed to create binding: ${err}`);
+        alert(`Failed to create binding: ${err.toString()}`);
         return;
       }
     }
