@@ -45,7 +45,7 @@ export class VariableComponent extends DashboardComponent {
           default: 'Variable',
         },
       },
-    }
+    },
   };
 
   /**
@@ -60,13 +60,13 @@ export class VariableComponent extends DashboardComponent {
 
   constructor(config: ComponentConfig) {
     super(config);
-    
+
     this.value = config.config.defaultValue ?? null;
 
-    this.onConfigUpdate();
     this.node
       .addPort(new Port('value', config.config.type as string, true))
       .addDataHandler(this.onPortData.bind(this));
+    this.onConfigUpdate();
   }
 
   protected async onPortData(
@@ -90,7 +90,7 @@ export class VariableComponent extends DashboardComponent {
       this.label = (config.config.label as string) || 'Variable';
 
       // Check if type changed - requires recreation with new port
-      const currentPort = this.node.getDownstreamPort('value');
+      const currentPort = this.node.getInputPort('value');
       const newType = config.config.type as string;
 
       if (currentPort && currentPort.type !== newType) {

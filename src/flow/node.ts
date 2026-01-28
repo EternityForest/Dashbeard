@@ -23,13 +23,13 @@ export class Node {
    * Map of downstream-facing ports (consumers).
    * Keyed by port name.
    */
-  protected downstreamPorts: Map<string, Port> = new Map();
+ public inputPorts: Map<string, Port> = new Map();
 
   /**
    * Map of upstream-facing ports (producers).
    * Keyed by port name.
    */
-  protected upstreamPorts: Map<string, Port> = new Map();
+  public outputPorts: Map<string, Port> = new Map();
 
   /**
    * Whether this node is currently active and running.
@@ -42,14 +42,17 @@ export class Node {
     this.id = id;
   }
 
-  /**
-   * Get all declared downstream-facing ports.
-   * Subclasses must declare all ports upfront.
-   *
-   * @returns Map of port name to Port
-   */
-  getDeclaredDownstreamPorts(): Map<string, Port> {
-    return this.downstreamPorts;
+  destroy(): void {
+
+    this.inputPorts.forEach((port) => {
+      port.destroy();
+    })
+    this.outputPorts.forEach((port) => {
+      port.destroy();
+    })
+    this.onReadyListeners = []; 
+    this.inputPorts.clear();
+    this.outputPorts.clear();
   }
 
   /**
@@ -58,16 +61,16 @@ export class Node {
    *
    * @returns Map of port name to Port
    */
-  getDeclaredUpstreamPorts(): Map<string, Port> {
-    return this.upstreamPorts;
+  getDeclaredOutputPorts(): Map<string, Port> {
+    return this.outputPorts;
   }
 
   addPort(port: Port): Port {
     port.parentNode = this;
-    if (port.isUpstream) {
-      this.downstreamPorts.set(port.name, port);
+    if (port.isOutput) {
+      this.inputPorts.set(port.name, port);
     } else {
-      this.upstreamPorts.set(port.name, port);
+      this.outputPorts.set(port.name, port);
     }
     return port;
   } 
@@ -102,8 +105,8 @@ export class Node {
    */
   async onDestroy(): Promise<void> {
     this.isReady = false;
-    this.downstreamPorts.clear();
-    this.upstreamPorts.clear();
+    this.inputPorts.clear();
+    this.outputPorts.clear();
   }
 
   /**
@@ -116,29 +119,26 @@ export class Node {
   /**
    * Get a specific downstream port by name.
    */
-  getDownstreamPort(name: string): Port | undefined {
-    return this.downstreamPorts.get(name);
+  getInputPort(name: string): Port {
+    if(!this.inputPorts.has(name)) {
+      throw new Error(`Port not found: ${name} on ${this.id}`);
+    }
+    return this.inputPorts.get(name)!;
   }
 
   /**
    * Get a specific upstream port by name.
    */
-  getUpstreamPort(name: string): Port | undefined {
-    return this.upstreamPorts.get(name);
+  getOutputPort(name: string): Port {
+    if(!this.outputPorts.has(name)) {
+      throw new Error(`Port not found: ${name} on ${this.id}`);
+    }
+    return this.outputPorts.get(name)!;
   }
 
   listPorts(): string[] {
-    const ports =[...this.downstreamPorts.values(), ...this.upstreamPorts.values()];
+    const ports =[...this.inputPorts.values(), ...this.outputPorts.values()];
     return ports.map(port => port.name);
   }
 
-  /**
-   * Initialize all ports for this node.
-   * Called automatically by NodeGraph.
-   * Stores references to all ports for later access.
-   */
-  initializePorts(): void {
-    this.downstreamPorts = this.getDeclaredDownstreamPorts();
-    this.upstreamPorts = this.getDeclaredUpstreamPorts();
-  }
 }

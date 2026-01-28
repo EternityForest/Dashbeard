@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { NodeGraph } from '@/flow/node-graph';
-import { Node, NodeSchema } from '@/flow/node';
+import { Node } from '@/flow/node';
 import { Port } from '@/flow/port';
 
 // Test implementation
 class TestNode extends Node {
 
-  constructor(id: string) {
+   constructor(id: string) {
     super(id);
     this.addPort(new Port('input', 'any', false));
     this.addPort(new Port('output', 'any', true));
@@ -36,8 +36,8 @@ describe('NodeGraph', () => {
 
   it('should reject duplicate node IDs', () => {
     const graph = new NodeGraph();
-    const node1 = new TestNode('node-1', {});
-    const node2 = new TestNode('node-1', {});
+    const node1 = new TestNode('node-1');
+    const node2 = new TestNode('node-1');
 
     graph.addNode(node1);
 
@@ -48,8 +48,8 @@ describe('NodeGraph', () => {
 
   it('should get all nodes', () => {
     const graph = new NodeGraph();
-    const node1 = new TestNode('node-1', {});
-    const node2 = new TestNode('node-2', {});
+    const node1 = new TestNode('node-1');
+    const node2 = new TestNode('node-2');
 
     graph.addNode(node1);
     graph.addNode(node2);
@@ -68,7 +68,11 @@ describe('NodeGraph', () => {
     graph.addNode(source);
     graph.addNode(sink);
 
-    await graph.addBinding('source.result', 'sink.input');
+    await graph.loadBinding({
+      fromPort: 'source.result',
+      toPort: 'sink.input',
+      id: 'binding-1',
+    });
 
     const bindings = graph.getBindings();
     expect(bindings).toHaveLength(1);
@@ -82,49 +86,49 @@ describe('NodeGraph', () => {
 
   it('should reject binding when upstream node not found', async () => {
     const graph = new NodeGraph();
-    const sink = new TestNode('sink', {});
+    const sink = new TestNode('sink');
 
     graph.addNode(sink);
 
     await expect(
-      graph.addBinding('missing', 'output', 'sink', 'input')
+      graph.loadBinding({ fromPort: 'missing', toPort: 'sink', id: 'binding-1' })
     ).rejects.toThrow('not found');
   });
 
   it('should reject binding when downstream node not found', async () => {
     const graph = new NodeGraph();
-    const source = new TestNode('source', {});
+    const source = new TestNode('source');
 
     graph.addNode(source);
 
     await expect(
-      graph.addBinding('source', 'output', 'missing', 'input')
+      graph.loadBinding({ fromPort: 'source.output', toPort: 'missing.input', id: 'binding-1' })
     ).rejects.toThrow('not found');
   });
 
   it('should reject binding when upstream port not found', async () => {
     const graph = new NodeGraph();
-    const source = new TestNode('source', {});
-    const sink = new TestNode('sink', {});
+    const source = new TestNode('source');
+    const sink = new TestNode('sink');
 
     graph.addNode(source);
     graph.addNode(sink);
 
     await expect(
-      graph.addBinding('source', 'missing', 'sink', 'input')
+      graph.loadBinding({ fromPort: 'source.missing', toPort: 'sink.input', id: 'binding-1' })
     ).rejects.toThrow('not found');
   });
 
   it('should reject binding when downstream port not found', async () => {
     const graph = new NodeGraph();
-    const source = new TestNode('source', {});
-    const sink = new TestNode('sink', {});
+    const source = new TestNode('source');
+    const sink = new TestNode('sink');
 
     graph.addNode(source);
     graph.addNode(sink);
 
     await expect(
-      graph.addBinding('source', 'output', 'sink', 'missing')
+      graph.loadBinding({ fromPort: 'source.output', toPort: 'sink.missing', id: 'binding-1' })
     ).rejects.toThrow('not found');
   });
 
@@ -138,27 +142,41 @@ describe('NodeGraph', () => {
 
     // number output to any input should fail ( mismatch)
     await expect(
-      graph.addBinding('num.result', 'any.input')
+      graph.loadBinding({ fromPort: 'num.result', toPort: 'any.input', id: 'binding-1' })
     ).rejects.toThrow('type mismatch');
   });
 
   it('should detect cycles', async () => {
     const graph = new NodeGraph();
-    const node1 = new NumberNode('node1', {});
-    const node2 = new NumberNode('node2', {});
-    const node3 = new NumberNode('node3', {});
+    const node1 = new NumberNode('node1');
+    const node2 = new NumberNode('node2');
+    const node3 = new NumberNode('node3');
 
     graph.addNode(node1);
     graph.addNode(node2);
     graph.addNode(node3);
 
     // Create chain: node1 -> node2 -> node3
-    await graph.addBinding('node1.result', 'node2.input');
-    await graph.addBinding('node2.result', 'node3.input');
+
+    await graph.loadBinding({
+      fromPort: 'node1.result',
+      toPort: 'node2.input',
+      id: 'binding-1',
+    })
+    await graph.loadBinding({
+      fromPort: 'node2.result',
+      toPort: 'node3.input',
+      id: 'binding-2',
+    })
     
     // Try to create cycle: node3 -> node1
     await expect(
-     graph.addBinding('node3.result', 'node1.input')
+     graph.loadBinding({
+      fromPort: 'node3.result',
+      toPort: 'node1.input',
+      id: 'binding-3',
+    })
+
     ).rejects.toThrow();
   });
 
@@ -182,7 +200,7 @@ describe('NodeGraph', () => {
 
   it('should not call onReady multiple times', async () => {
     const graph = new NodeGraph();
-    const node = new TestNode('node', {});
+    const node = new TestNode('node');
 
     const onReady = vi.spyOn(node, 'onReady');
 
@@ -195,8 +213,8 @@ describe('NodeGraph', () => {
 
   it('should destroy all nodes', async () => {
     const graph = new NodeGraph();
-    const node1 = new TestNode('node-1', {});
-    const node2 = new TestNode('node-2', {});
+    const node1 = new TestNode('node-1');
+    const node2 = new TestNode('node-2');
 
     const onDestroy1 = vi.spyOn(node1, 'onDestroy');
     const onDestroy2 = vi.spyOn(node2, 'onDestroy');
@@ -221,8 +239,17 @@ describe('NodeGraph', () => {
     graph.addNode(middle);
     graph.addNode(sink);
 
-    await graph.addBinding('source.result', 'middle.input');
-    await graph.addBinding('middle.result', 'sink.input');
+    await graph.loadBinding({
+      fromPort: 'source.result',
+      toPort: 'middle.input',
+      id: 'binding-1',
+    })
+
+    await graph.loadBinding({
+      fromPort: 'middle.result',
+      toPort: 'sink.input',
+      id: 'binding-2',
+    })
 
     expect(graph.getBindings()).toHaveLength(2);
 
@@ -248,9 +275,21 @@ describe('NodeGraph', () => {
     graph.addNode(n3);
     graph.addNode(n4);
 
-    await graph.addBinding('n1.result', 'n2.input');
-    await graph.addBinding('n2.result', 'n3.input');
-    await graph.addBinding('n3.result', 'n4.input');
+    await graph.loadBinding({
+      fromPort: 'n1.result',
+      toPort: 'n2.input',
+      id: 'binding-1',
+    })
+    await graph.loadBinding({
+      fromPort: 'n2.result',
+      toPort: 'n3.input',
+      id: 'binding-2',
+    })
+    await graph.loadBinding({
+      fromPort: 'n3.result',
+      toPort: 'n4.input',
+      id: 'binding-3',
+    })
 
     expect(graph.getBindings()).toHaveLength(3);
     expect(graph.getNodes()).toHaveLength(4);
@@ -269,17 +308,35 @@ describe('NodeGraph', () => {
     graph.addNode(n3);
     graph.addNode(n4);
 
-    await graph.addBinding('n1.result', 'n2.input');
-    await graph.addBinding('n2.result', 'n3.input');
-    await graph.addBinding('n3.result', 'n4.input');
+    await graph.loadBinding({
+      fromPort: 'n1.result',
+      toPort: 'n2.input',
+      id: 'binding-1',
+    })
+    await graph.loadBinding({
+      fromPort: 'n2.result',
+      toPort: 'n3.input',
+      id: 'binding-2',
+    })
+    await graph.loadBinding({
+      fromPort: 'n3.result',
+      toPort: 'n4.input',
+      id: 'binding-3',
+    })
 
     // Try to create cycle: n4 -> n1
-    await expect(graph.addBinding('n4.result', 'n1.input')).rejects.toThrow();
+    await expect(graph.
+      loadBinding({
+        fromPort: 'n4.result',
+        toPort: 'n1.input',
+        id: 'binding-4',
+      })
+    ).rejects.toThrow();
   });
 
   it('should call onDestroy on removed nodes', async () => {
     const graph = new NodeGraph();
-    const node = new TestNode('node', {});
+    const node = new TestNode('node');
 
     const onDestroy = vi.spyOn(node, 'onDestroy');
 

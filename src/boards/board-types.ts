@@ -41,17 +41,31 @@ export interface ComponentConfig {
 }
 
 /**
+ * Filter instance in a binding's filter stack.
+ */
+export interface BindingFilterItem {
+  /** Filter type (e.g., 'add', 'multiply', 'invert') */
+  type: string;
+
+  /** Filter configuration */
+  config: Record<string, unknown>;
+}
+
+/**
  * A binding connects two component ports together.
  */
 export interface BindingDefinition {
   /** Unique ID for editor tracking */
   id: string;
 
-  /** Upstream component.port reference */
-  upstream: string;
+  /** The output port of the upstream component */
+  fromPort: string;
 
-  /** Downstream component.port reference */
-  downstream: string;
+  /** Optional filter stack applied to the binding */
+  filters?: BindingFilterItem[];
+
+  /** The input port of the downstream component */
+  toPort: string;
 
   /** Optional value transform (Phase 4) */
   transform?: string;
@@ -137,10 +151,22 @@ export const BOARD_SCHEMA: Record<string, unknown> = {
       items: {
         type: 'object',
         properties: {
-          upstream: { type: 'string' },
-          downstream: { type: 'string' },
+          id: { type: 'string' },
+          fromPort: { type: 'string' },
+          filters: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                type: { type: 'string' },
+                config: { type: 'object' },
+              },
+              required: ['type', 'config'],
+            },
+          },
+          toPort: { type: 'string' },
         },
-        required: ['upstream', 'downstream'],
+        required: ['id', 'fromPort', 'toPort'],
       },
     },
     settings: {

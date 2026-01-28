@@ -10,6 +10,7 @@ import { validateBoardComplete } from '@/boards/board-validator';
 import { DashboardComponent } from '@/components/dashboard-component';
 import type { ComponentConfig } from '@/boards/board-types';
 import { Observable } from '@/core/observable';
+import { LoadedBinding } from '@/flow/loaded-binding';
 /**
  * Maps board component types to their Node implementations.
  * Populated at runtime to support custom components.
@@ -43,7 +44,8 @@ export class BoardRuntime {
    */
   private classes = new Map<string, typeof DashboardComponent>();
 
-  public nodeGraphRefreshed: Observable<null> = new Observable<null>(null);
+
+  public nodeGraphRefreshed: Observable<null> = this.graph.nodeGraphRefreshed;  
 
   public lastClickedComponent: Observable<string | null> = new Observable<
     string | null
@@ -81,6 +83,8 @@ export class BoardRuntime {
   onComponentClick(componentId: string) {
     this.lastClickedComponent.set(componentId);
   }
+
+  
   /**
    * Load a board definition from JSON.
    * Validates structure, creates nodes, and establishes bindings.
@@ -98,9 +102,9 @@ export class BoardRuntime {
       this.rootComponent = this.loadComponent(validated.rootComponent);
     }
 
-    // Establish all bindings
+    // Establish all bindings (including filter stacks)
     for (const binding of validated.bindings) {
-      await this.graph.addBinding(binding.upstream, binding.downstream);
+      await this.loadBinding(binding);
     }
 
     // Initialize all nodes
@@ -413,13 +417,12 @@ export class BoardRuntime {
       .getBindings()
       .filter(
         (b) =>
-          b.upstreamNodeId === componentId || b.downstreamNodeId === componentId
-      )
-      .map((b) => ({
-        upstream: `${b.upstreamNodeId}.${b.upstreamPortName}`,
-        downstream: `${b.downstreamNodeId}.${b.downstreamPortName}`,
-      }));
+          b.upstream.split('.')[0] === componentId || b.downstream.split('.')[0] === componentId
+      );
 
+    affectedBindings.forEach((b) => {
+      this.graph.removeBindingConfig(b.upstream, b.downstream);
+    })
     // Delete old component (preserve parent reference)
     await this.deleteComponent(componentId, true);
 
@@ -467,15 +470,5 @@ export class BoardRuntime {
     return newComponent;
   }
 
-  /**
-   * Delete a binding in the data flow graph.
-   *
-   * @param upstreamPort The upstream port reference (componentId.portName)
-   * @param downstreamPort The downstream port reference (componentId.portName)
-   * @throws If binding not found
-   */
-  async deleteBinding(upstreamPort: string, downstreamPort: string): Promise<void> {
-    this.graph.removeBinding(upstreamPort, downstreamPort);
-    this.nodeGraphRefreshed.notifyObservers();
-  }
+
 }

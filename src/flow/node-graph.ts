@@ -7,19 +7,11 @@
  * - Port connection management
  */
 
-import { i } from 'vitest/dist/reporters-w_64AS5f.js';
 import { Node } from './node';
-
-/**
- * Represents a binding between two ports.
- */
-export interface Binding {
-  upstreamNodeId: string;
-  upstreamPortName: string;
-  downstreamNodeId: string;
-  downstreamPortName: string;
-}
-
+import type { BindingDefinition } from '../boards/board-types';
+import { LoadedBinding } from './loaded-binding';
+import { Filter, filterRegistry } from '@/flow/filter';
+import { Observable } from '@/core/observable';
 /**
  * NodeGraph manages all nodes and their connections in the data flow system.
  * Enforces invariants:
@@ -34,10 +26,12 @@ export class NodeGraph {
   private nodes = new Map<string, Node>();
 
   /**
-   * All active bindings in the graph.
-   * Stored for inspection and validation.
+   * Map of binding IDs to their LoadedBinding instances.
+   * Holds the filter stack and node wiring for each binding.
    */
-  private bindings: Binding[] = [];
+  private loadedBindings = new Map<string, LoadedBinding>();
+
+  public nodeGraphRefreshed: Observable<null> = new Observable<null>(null);
 
   /**
    * Track which nodes have been initialized.
@@ -57,7 +51,10 @@ export class NodeGraph {
     }
 
     this.nodes.set(node.id, node);
-    node.initializePorts();
+  }
+
+  getBindings(): LoadedBinding[] {
+    return Array.from(this.loadedBindings.values());
   }
 
   /**
@@ -73,17 +70,13 @@ export class NodeGraph {
       throw new Error(`Node with ID "${nodeId}" not found`);
     }
 
-    // Remove all bindings involving this node
-    this.bindings = this.bindings.filter((binding) => {
-      if (
-        binding.upstreamNodeId === nodeId ||
-        binding.downstreamNodeId === nodeId
-      ) {
-        this.disconnectBinding(binding);
-        return false;
-      }
-      return true;
-    });
+    const affectedBindings = Array.from(this.loadedBindings.values()).filter(
+      (b) => b.sourceNode.id === nodeId || b.destinationNode.id === nodeId
+    )
+
+    for (const binding of affectedBindings) {
+      this.deleteBinding(binding.config);
+    }
 
     // Clean up
     if (this.readyNodes.has(nodeId)) {
@@ -93,7 +86,6 @@ export class NodeGraph {
 
     this.nodes.delete(nodeId);
   }
-
 
   canBind(upstreamPort: string, downstreamPort: string): boolean {
     const [upstreamNodeId, upstreamPortName] = upstreamPort.split('.');
@@ -110,79 +102,79 @@ export class NodeGraph {
     if (upstreamPortName === downstreamPortName) {
       return false;
     }
-    const upstreamPortObj = upstreamNode.getDownstreamPort(upstreamPortName);
-    const downstreamPortObj = downstreamNode.getUpstreamPort(downstreamPortName);
+    const upstreamPortObj = upstreamNode.getInputPort(upstreamPortName);
+    const downstreamPortObj =
+      downstreamNode.getOutputPort(downstreamPortName);
 
     if (!upstreamPortObj || !downstreamPortObj) {
       return false;
     }
-    
-    if((upstreamPortObj.type+".").startsWith(downstreamPortObj.type + ".") || (downstreamPortObj.type+".").startsWith(upstreamPortObj.type + ".")){
+
+    if (
+      (upstreamPortObj.type + '.').startsWith(downstreamPortObj.type + '.') ||
+      (downstreamPortObj.type + '.').startsWith(upstreamPortObj.type + '.')
+    ) {
       return true;
     }
 
     return false;
   }
+
   /**
-   * Create a binding between two ports.
-   * Validates:
-   * - Both nodes exist
-   * - Both ports exist
-   * - Port types are compatible
-   * - Creates no cycles
-   * - Upstream port not already connected
+   * Load a binding with optional filter stack.
+   * Creates filter nodes and wires them between upstream and downstream.
    *
-   * @param upstreamPort The upstream port to connect
-   * @param downstreamPort The downstream port to connect
+   * @param binding The binding definition
+   * @throws If filter types not registered or nodes not found
    */
-  async addBinding(
-    upstreamPort: string,
-    downstreamPort: string
-  ): Promise<void> {
+  async loadBinding(binding: BindingDefinition): Promise<void> {
+    const upstreamCompId = binding.fromPort.split('.')[0];
+    const downstreamCompId = binding.toPort.split('.')[0];
 
-    const [upstreamNodeId, upstreamPortName] = upstreamPort.split('.');
-    const [downstreamNodeId, downstreamPortName] = downstreamPort.split('.');
-    // Validate nodes exist
-    const upstreamNode = this.nodes.get(upstreamNodeId);
-    if (!upstreamNode) {
-      throw new Error(`Upstream node "${upstreamNodeId}" not found`);
-    }
-
-    const downstreamNode = this.nodes.get(downstreamNodeId);
-    if (!downstreamNode) {
-      throw new Error(`Downstream node "${downstreamNodeId}" not found`);
-    }
-
-    // Validate ports exist
-    const upstreamPortObj = upstreamNode.getDownstreamPort(upstreamPortName);
-    if (!upstreamPortObj) {
+    const upstreamNode = this.getNode(upstreamCompId);
+    const downstreamNode = this.getNode(downstreamCompId);
+    if (!upstreamNode || !downstreamNode) {
       throw new Error(
-        `Upstream port "${upstreamPortName}" not found on node "${upstreamNodeId}(${upstreamNode.listPorts().join(', ')})"`
-      );
-    }
-
-    const downstreamPortObj = downstreamNode.getUpstreamPort(
-      downstreamPortName
-    );
-    if (!downstreamPortObj) {
-      throw new Error(
-        `Downstream port "${downstreamPortName}" not found on node "${downstreamNodeId}"`
+        `Binding references non-existent component: ${binding.fromPort} → ${binding.toPort}`
       );
     }
 
     // Detect cycles before connecting
-    this.detectCycle(downstreamNodeId, upstreamNodeId);
+    this.detectCycle(downstreamNode.id, upstreamNode.id);
 
-    // Connect the ports (this also validates port compatibility)
-    await upstreamPortObj.connectToDownstream(downstreamPortObj);
+    const loadedBinding = new LoadedBinding(this, binding);
+    this.loadedBindings.set(binding.id, loadedBinding);
 
-    // Record the binding
-    this.bindings.push({
-      upstreamNodeId,
-      upstreamPortName,
-      downstreamNodeId,
-      downstreamPortName,
-    });
+    await loadedBinding.doConnect();
+    this.nodeGraphRefreshed.notifyObservers();
+  }
+
+  /**
+   * Delete a binding in the data flow graph.
+   * Removes the binding and any associated filter nodes.
+   *
+   * @param upstreamPort The upstream port reference (componentId.portName)
+   * @param downstreamPort The downstream port reference (componentId.portName)
+   * @throws If binding not found
+   */
+  deleteBinding(
+    bindingConfig : BindingDefinition,
+  ) {
+    // Find the LoadedBinding that matches these ports
+    let bindingToDelete: LoadedBinding | undefined;
+    for (const [, loadedBinding] of this.loadedBindings) {
+      if (
+        loadedBinding.config.fromPort === bindingConfig.fromPort &&
+        loadedBinding.config.toPort === bindingConfig.toPort
+      ) {
+        bindingToDelete = loadedBinding;
+        break;
+      }
+    }
+
+    bindingToDelete?.destroy();
+
+    this.nodeGraphRefreshed.notifyObservers();
   }
 
   /**
@@ -190,10 +182,10 @@ export class NodeGraph {
    *
    * @param binding The binding to remove
    */
-  private disconnectBinding(binding: Binding): void {
-    const upstreamNode = this.nodes.get(binding.upstreamNodeId);
+  private disconnectBinding(binding: BindingDefinition): void {
+    const upstreamNode = this.nodes.get(binding.fromPort.split('.')[0]);
     if (upstreamNode) {
-      const port = upstreamNode.getUpstreamPort(binding.upstreamPortName);
+      const port = upstreamNode.getOutputPort(binding.fromPort.split('.')[1]);
       if (port) {
         port.disconnectFromUpstream();
       }
@@ -239,9 +231,10 @@ export class NodeGraph {
     visited.add(source);
 
     // Get all nodes this source connects to (downstream connections)
-    const outgoing = this.bindings
-      .filter((b) => b.upstreamNodeId === source)
-      .map((b) => b.downstreamNodeId);
+    const outgoing: string[] = this.loadedBindings
+      .values()
+      .filter((b: LoadedBinding) => b.sourceNode.id === source)
+      .map((b: LoadedBinding) => b.destinationNode.id);
 
     for (const next of outgoing) {
       if (this.hasPath(next, target, visited)) return true;
@@ -275,14 +268,18 @@ export class NodeGraph {
         await node.onDestroy();
       }
     }
+    for (const loadedBinding of this.loadedBindings) {
+      loadedBinding[1].destroy();
+    }
+    this.nodes.clear();
     this.readyNodes.clear();
-    this.bindings = [];
+    this.loadedBindings.clear();
   }
 
   async clear(): Promise<void> {
     await this.destroy();
     this.nodes.clear();
-  } 
+  }
 
   /**
    * Get a node by ID.
@@ -298,40 +295,4 @@ export class NodeGraph {
     return Array.from(this.nodes.values());
   }
 
-  /**
-   * Get all bindings.
-   */
-  getBindings(): Binding[] {
-    return [...this.bindings];
-  }
-
-  /**
-   * Remove a binding between two ports by their references.
-   *
-   * @param upstreamPort The upstream port reference (componentId.portName)
-   * @param downstreamPort The downstream port reference (componentId.portName)
-   * @throws If binding not found
-   */
-  removeBinding(upstreamPort: string, downstreamPort: string): void {
-    const [upstreamNodeId, upstreamPortName] = upstreamPort.split('.');
-    const [downstreamNodeId, downstreamPortName] = downstreamPort.split('.');
-
-    const bindingIndex = this.bindings.findIndex(
-      (b) =>
-        b.upstreamNodeId === upstreamNodeId &&
-        b.upstreamPortName === upstreamPortName &&
-        b.downstreamNodeId === downstreamNodeId &&
-        b.downstreamPortName === downstreamPortName
-    );
-
-    if (bindingIndex === -1) {
-      throw new Error(
-        `Binding from "${upstreamPort}" to "${downstreamPort}" not found`
-      );
-    }
-
-    const binding = this.bindings[bindingIndex];
-    this.disconnectBinding(binding);
-    this.bindings.splice(bindingIndex, 1);
-  }
 }

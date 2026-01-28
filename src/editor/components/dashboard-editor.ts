@@ -24,7 +24,7 @@ export class DashboardEditor extends LitElement {
    * ID of board to load. Optional - can load via setBoard().
    */
   @property() boardId?: string;
-  
+
   /**
    * Type-safe reference to the dashboard renderer element.
    */
@@ -171,6 +171,7 @@ export class DashboardEditor extends LitElement {
       await this.renderer.loadBoard(board);
     } catch (err) {
       this.error = `Failed to render board: ${String(err)}`;
+      console.error(err);
     }
   }
 

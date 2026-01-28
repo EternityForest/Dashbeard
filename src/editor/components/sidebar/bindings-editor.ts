@@ -8,6 +8,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { EditorState } from '../../editor-state';
 import type { BindingDefinition, Component } from '../../types';
 import type { BoardRuntime } from '@/runtime';
+import { filterRegistry } from '@/flow/filter';
 
 /**
  * Bindings editor for connecting component ports.
@@ -49,9 +50,14 @@ export class BindingsEditor extends LitElement {
    * Form state for binding creation.
    */
   @property({ type: Object })
-  formState: { upstream: string; downstream: string } = {
-    upstream: '',
-    downstream: '',
+  formState: {
+    fromPort: string;
+    toPort: string;
+    filters: Array<{ type: string; config: Record<string, unknown> }>;
+  } = {
+    fromPort: '',
+    toPort: '',
+    filters: [],
   };
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
@@ -122,8 +128,8 @@ export class BindingsEditor extends LitElement {
     if (this.selectedComponent) {
       // Show bindings connected to selected component
       this.relevantBindings = this.bindings.filter((b) => {
-        const [upstreamCompId] = b.upstream.split('.');
-        const [downstreamCompId] = b.downstream.split('.');
+        const [upstreamCompId] = b.fromPort.split('.');
+        const [downstreamCompId] = b.toPort.split('.');
         return (
           upstreamCompId === this.selectedComponent!.id ||
           downstreamCompId === this.selectedComponent!.id
@@ -142,6 +148,48 @@ export class BindingsEditor extends LitElement {
    */
   private getRuntime(): BoardRuntime | null {
     return this.editorState?.editorComponent.renderer?.runtime || null;
+  }
+
+  /**
+   * Get all available filters for binding.
+   */
+  private getAvailableFilters(): Array<{ type: string; displayName: string }> {
+    return filterRegistry.getAll().map((manifest) => ({
+      type: manifest.type,
+      displayName: manifest.displayName,
+    }));
+  }
+
+  /**
+   * Add filter to the filter stack in form state.
+   */
+  private addFilterToStack(filterType: string): void {
+    const manifest = filterRegistry.getManifest(filterType);
+    if (!manifest) return;
+
+    // Create default config from schema
+    const defaultConfig: Record<string, unknown> = {};
+    for (const [key, prop] of Object.entries(
+      manifest.configSchema.properties || {}
+    )) {
+      if (typeof prop === 'object' && prop !== null && 'default' in prop) {
+        defaultConfig[key] = (prop as any).default;
+      }
+    }
+
+    this.formState.filters.push({
+      type: filterType,
+      config: defaultConfig,
+    });
+    this.requestUpdate();
+  }
+
+  /**
+   * Remove filter from stack by index.
+   */
+  private removeFilterFromStack(index: number): void {
+    this.formState.filters.splice(index, 1);
+    this.requestUpdate();
   }
 
   /**
@@ -173,7 +221,7 @@ export class BindingsEditor extends LitElement {
     if (!node) return [];
 
     // Get actual output ports (downstream-facing ports on the node)
-    const ports = Array.from(node.getDeclaredDownstreamPorts().values());
+    const ports = Array.from(node.inputPorts.values());
     return ports.map((port) => ({
       name: port.name,
       type: port.type,
@@ -193,7 +241,7 @@ export class BindingsEditor extends LitElement {
     if (!node) return [];
 
     // Get actual input ports (upstream-facing ports on the node)
-    const ports = Array.from(node.getDeclaredUpstreamPorts().values());
+    const ports = Array.from(node.getDeclaredOutputPorts().values());
     return ports.map((port) => ({
       name: port.name,
       type: port.type,
@@ -213,7 +261,7 @@ export class BindingsEditor extends LitElement {
     const sourceNode = runtime.getNode(sourceComponentId);
     if (!sourceNode) return [];
 
-    const sourcePort = sourceNode.getDownstreamPort(sourcePortName);
+    const sourcePort = sourceNode.getInputPort(sourcePortName);
     if (!sourcePort) return [];
 
     const compatible: Array<{
@@ -228,7 +276,7 @@ export class BindingsEditor extends LitElement {
       const targetNode = runtime.getNode(component.id);
       if (!targetNode) continue;
 
-      for (const port of targetNode.getDeclaredUpstreamPorts().values()) {
+      for (const port of targetNode.getDeclaredOutputPorts().values()) {
         if (
           sourcePort.type === port.type ||
           sourcePort.type === 'any' ||
@@ -259,7 +307,7 @@ export class BindingsEditor extends LitElement {
     const targetNode = runtime.getNode(targetComponentId);
     if (!targetNode) return [];
 
-    const targetPort = targetNode.getUpstreamPort(targetPortName);
+    const targetPort = targetNode.getOutputPort(targetPortName);
     if (!targetPort) return [];
 
     const compatible: Array<{
@@ -274,7 +322,7 @@ export class BindingsEditor extends LitElement {
       const sourceNode = runtime.getNode(component.id);
       if (!sourceNode) continue;
 
-      for (const port of sourceNode.getDeclaredDownstreamPorts().values()) {
+      for (const port of sourceNode.inputPorts.values()) {
         if (
           port.type === targetPort.type ||
           port.type === 'any' ||
@@ -308,7 +356,7 @@ export class BindingsEditor extends LitElement {
     const runtime = this.getRuntime();
     if (runtime) {
       try {
-        await runtime.deleteBinding(binding.upstream, binding.downstream);
+        await runtime.deleteBinding(binding.fromPort, binding.toPort);
       } catch (err) {
         console.warn(`Failed to delete binding in runtime: ${err}`);
       }
@@ -326,8 +374,9 @@ export class BindingsEditor extends LitElement {
    * Handle new binding creation.
    */
   private async handleCreateBinding(
-    upstream: string,
-    downstream: string
+    fromPort: string,
+    toPort: string,
+    filters?: Array<{ type: string; config: Record<string, unknown> }>
   ): Promise<void> {
     if (!this.editorState) return;
 
@@ -335,7 +384,7 @@ export class BindingsEditor extends LitElement {
     if (!board) return;
 
     // Validate format
-    if (!upstream.includes('.') || !downstream.includes('.')) {
+    if (!fromPort.includes('.') || !toPort.includes('.')) {
       alert('Invalid port format. Use "componentId.portName"');
       return;
     }
@@ -343,7 +392,7 @@ export class BindingsEditor extends LitElement {
     // Check for duplicate
     if (
       board.bindings.some(
-        (b) => b.upstream === upstream && b.downstream === downstream
+        (b) => b.fromPort === fromPort && b.toPort === toPort
       )
     ) {
       alert('This binding already exists');
@@ -354,7 +403,9 @@ export class BindingsEditor extends LitElement {
     const runtime = this.getRuntime();
     if (runtime) {
       try {
-        await runtime.getGraph().addBinding(upstream, downstream);
+        // For now, create binding without filters in runtime
+        // Filter wiring will happen when the full binding is created
+        await runtime.getGraph().addBinding(fromPort, toPort);
       } catch (err) {
         alert(`Failed to create binding: ${err}`);
         return;
@@ -364,8 +415,9 @@ export class BindingsEditor extends LitElement {
     // Create binding
     const binding: BindingDefinition = {
       id: `binding-${Date.now()}`,
-      upstream,
-      downstream,
+      fromPort: fromPort,
+      toPort: toPort,
+      ...(filters && filters.length > 0 && { filters }),
     };
 
     board.bindings.push(binding);
@@ -410,8 +462,8 @@ export class BindingsEditor extends LitElement {
    * Render a single binding.
    */
   private renderBinding(binding: BindingDefinition): TemplateResult {
-    const [upstreamCompId, upstreamPort] = binding.upstream.split('.');
-    const [downstreamCompId, downstreamPort] = binding.downstream.split('.');
+    const [upstreamCompId, upstreamPort] = binding.fromPort.split('.');
+    const [downstreamCompId, downstreamPort] = binding.toPort.split('.');
 
     return html`
       <div class="binding-item">
@@ -440,28 +492,28 @@ export class BindingsEditor extends LitElement {
   /**
    * Handle upstream port selection change.
    */
-  private handleUpstreamChange(value: string): void {
-    this.formState.upstream = value;
+  private handleFromPortChange(value: string): void {
+    this.formState.fromPort = value;
     this.requestUpdate();
   }
 
   /**
    * Handle downstream port selection change.
    */
-  private handleDownstreamChange(value: string): void {
-    this.formState.downstream = value;
+  private handleToPortChange(value: string): void {
+    this.formState.toPort = value;
     this.requestUpdate();
   }
 
   /**
    * Get downstream port options - all if upstream not set, filtered if set.
    */
-  private getDownstreamOptions(): Array<{
+  private getToPortOptions(): Array<{
     componentId: string;
     portName: string;
     type: string;
   }> {
-    if (!this.formState.upstream) {
+    if (!this.formState.fromPort) {
       // Show all input ports
       return this.allComponents.flatMap((comp) =>
         this.getInputPorts(comp.id).map((port) => ({
@@ -472,21 +524,21 @@ export class BindingsEditor extends LitElement {
       );
     } else {
       // Show only compatible input ports
-      const [upstreamCompId, upstreamPort] =
-        this.formState.upstream.split('.');
-      return this.getCompatibleInputPorts(upstreamCompId, upstreamPort);
+      const [fromCompId, fromPort] =
+        this.formState.fromPort.split('.');
+      return this.getCompatibleInputPorts(fromCompId, fromPort);
     }
   }
 
   /**
    * Get upstream port options - all if downstream not set, filtered if set.
    */
-  private getUpstreamOptions(): Array<{
+  private getFromPortOptions(): Array<{
     componentId: string;
     portName: string;
     type: string;
   }> {
-    if (!this.formState.downstream) {
+    if (!this.formState.toPort) {
       // Show all output ports
       return this.allComponents.flatMap((comp) =>
         this.getOutputPorts(comp.id).map((port) => ({
@@ -497,9 +549,9 @@ export class BindingsEditor extends LitElement {
       );
     } else {
       // Show only compatible output ports
-      const [downstreamCompId, downstreamPort] =
-        this.formState.downstream.split('.');
-      return this.getCompatibleOutputPorts(downstreamCompId, downstreamPort);
+      const [toCompId, toPort] =
+        this.formState.toPort.split('.');
+      return this.getCompatibleOutputPorts(toCompId, toPort);
     }
   }
 
@@ -507,38 +559,39 @@ export class BindingsEditor extends LitElement {
    * Render the form to create a new binding.
    */
   private renderCreateBindingForm(): TemplateResult {
-    const downstreamOptions = this.getDownstreamOptions();
-    const upstreamOptions = this.getUpstreamOptions();
+    const toPortOptions = this.getToPortOptions();
+    const fromPortOptions = this.getFromPortOptions();
 
     return html`
       <form
         @submit="${(e: Event) => {
           e.preventDefault();
-          if (this.formState.upstream && this.formState.downstream) {
+          if (this.formState.fromPort && this.formState.toPort) {
             this.handleCreateBinding(
-              this.formState.upstream,
-              this.formState.downstream
+              this.formState.fromPort,
+              this.formState.toPort,
+              this.formState.filters
             ).catch(alert);
-            this.formState = { upstream: '', downstream: '' };
+            this.formState = { fromPort: '', toPort: '', filters: [] };
             this.requestUpdate();
           }
         }}"
       >
         <div class="form-group">
-          <label>Source Port (upstream)</label>
+          <label>Source Port</label>
           <input
             type="text"
             name="upstream"
             placeholder="componentId.portName"
             list="upstream-ports"
-            .value="${this.formState.upstream}"
+            .value="${this.formState.fromPort}"
             @input="${(e: Event) =>
-              this.handleUpstreamChange(
+              this.handleFromPortChange(
                 (e.target as HTMLInputElement).value
               )}"
           />
           <datalist id="upstream-ports">
-            ${upstreamOptions.map(
+            ${fromPortOptions.map(
               (port) => html`
                 <option value="${port.componentId}.${port.portName}">
                   ${port.componentId}.${port.portName} (${port.type})
@@ -546,7 +599,7 @@ export class BindingsEditor extends LitElement {
               `
             )}
           </datalist>
-          ${this.formState.downstream && upstreamOptions.length === 0
+          ${this.formState.toPort && fromPortOptions.length === 0
             ? html`<div class="error-hint">
                 No compatible output ports for selected input port
               </div>`
@@ -554,20 +607,20 @@ export class BindingsEditor extends LitElement {
         </div>
 
         <div class="form-group">
-          <label>Target Port (downstream)</label>
+          <label>Target Port(downstream)</label>
           <input
             type="text"
             name="downstream"
             placeholder="componentId.portName"
             list="downstream-ports"
-            .value="${this.formState.downstream}"
+            .value="${this.formState.toPort}"
             @input="${(e: Event) =>
-              this.handleDownstreamChange(
+              this.handleToPortChange(
                 (e.target as HTMLInputElement).value
               )}"
           />
           <datalist id="downstream-ports">
-            ${downstreamOptions.map(
+            ${toPortOptions.map(
               (port) => html`
                 <option value="${port.componentId}.${port.portName}">
                   ${port.componentId}.${port.portName} (${port.type})
@@ -575,21 +628,76 @@ export class BindingsEditor extends LitElement {
               `
             )}
           </datalist>
-          ${this.formState.upstream && downstreamOptions.length === 0
+          ${this.formState.fromPort && toPortOptions.length === 0
             ? html`<div class="error-hint">
                 No compatible input ports for selected output port
               </div>`
             : ''}
         </div>
 
+        <!-- Filter Stack Section -->
+        ${this.renderFilterStackUI()}
+
         <button
           type="submit"
           class="create-button"
-          ?disabled="${!this.formState.upstream || !this.formState.downstream}"
+          ?disabled="${!this.formState.fromPort || !this.formState.toPort}"
         >
           Create Binding
         </button>
       </form>
+    `;
+  }
+
+  /**
+   * Render the filter stack UI section in the form.
+   */
+  private renderFilterStackUI(): TemplateResult {
+    const availableFilters = this.getAvailableFilters();
+
+    return html`
+      <div class="form-group" style="border-top: 1px solid #ddd; padding-top: 12px; margin-top: 12px;">
+        <label style="margin-bottom: 8px; display: block;">Filters (Optional)</label>
+
+        ${this.formState.filters.length > 0
+          ? html`
+              <div style="margin-bottom: 8px; padding: 8px; background: #f5f5f5; border-radius: 3px;">
+                ${this.formState.filters.map(
+                  (filter, index) => html`
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${index < this.formState.filters.length - 1 ? '8px' : '0'};">
+                      <span style="font-size: 12px; font-weight: 600;">
+                        ${filterRegistry.getManifest(filter.type)?.displayName || filter.type}
+                      </span>
+                      <button
+                        type="button"
+                        style="padding: 2px 6px; font-size: 11px; background: #fee; border: 1px solid #fcc; color: #c33; cursor: pointer; border-radius: 2px;"
+                        @click="${() => this.removeFilterFromStack(index)}"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  `
+                )}
+              </div>
+            `
+          : ''}
+
+        <select
+          @change="${(e: Event) => {
+            const select = e.target as HTMLSelectElement;
+            if (select.value) {
+              this.addFilterToStack(select.value);
+              select.value = '';
+            }
+          }}"
+          style="width: 100%; padding: 6px 8px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; box-sizing: border-box;"
+        >
+          <option value="">Add filter...</option>
+          ${availableFilters.map(
+            (filter) => html`<option value="${filter.type}">${filter.displayName}</option>`
+          )}
+        </select>
+      </div>
     `;
   }
 }

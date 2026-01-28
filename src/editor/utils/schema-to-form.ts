@@ -95,11 +95,7 @@ function renderStringField(
           ${formatName(name)}
         </div>
         <select
-          style="width: 100%; padding: 6px 8px;
-                  border: 1px solid #ddd;
-                  border-radius: 3px;
-                  font-size: 12px;
-                  background: white;"
+          style="width: 100%;"
           @change="${(e: Event) =>
             onChange(
               (e.target as HTMLSelectElement).value
@@ -132,11 +128,7 @@ function renderStringField(
         ${formatName(name)}
       </div>
       <input type="text"
-             style="width: 100%; padding: 6px 8px;
-                     border: 1px solid #ddd;
-                     border-radius: 3px;
-                     font-size: 12px;
-                     box-sizing: border-box;"
+             style="width: 100%;"
              .value="${stringValue}"
              @change="${(e: Event) =>
                onChange(
@@ -173,11 +165,7 @@ function renderNumberField(
       </div>
 
       <input type="number"
-             style="width: 100%; padding: 6px 8px;
-                     border: 1px solid #ddd;
-                     border-radius: 3px;
-                     font-size: 12px;
-                     box-sizing: border-box;"
+             style="width: 100%;"
              .value="${String(numValue)}"
              ?min="${min !== undefined}"
              .min="${min?.toString() || ''}"

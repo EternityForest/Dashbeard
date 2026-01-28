@@ -4,9 +4,9 @@
  * Enables schema-based editors and type validation.
  */
 
+import { ComponentConfig } from '@/boards/board-types';
 import type {
   ComponentTypeSchema,
-  ComponentRegistryEntry,
   ConfigSchema,
 } from './types';
 
@@ -110,7 +110,7 @@ export class ComponentRegistry {
    */
   validateConfig(
     type: string,
-    config: Record<string, unknown>
+    config: ComponentConfig['config']
   ): string[] {
     const schema = this.getSchema(type);
     const errors: string[] = [];
@@ -175,7 +175,7 @@ export class ComponentRegistry {
       }
     } else if (schemaType && schemaType !== actualType) {
       errors.push(
-        `Property "${propName}" must be ${schemaType}, got ${actualType}`
+        `Property "${propName}" must be ${schemaType.toString()}, got ${actualType}`
       );
       return errors;
     }

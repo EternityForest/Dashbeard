@@ -101,14 +101,7 @@ export class DashboardComponent extends LitElement {
     this.requestUpdate();
   }
 
-  /**
-   * Connect a data handler to a port for UI binding.
-   * When data arrives, update the UI property.
-   *
-   * @param portName Name of the port
-   * @param isUpstream true for output ports, false for input ports
-   * @param onData Callback when data arrives
-   */
+
   protected subscribeToPort(
     portName: string,
     onData: (data: PortData, sourceType: SourceType) => Promise<void>
@@ -118,8 +111,8 @@ export class DashboardComponent extends LitElement {
     }
 
     const port =
-      this.node.getUpstreamPort(portName) ||
-      this.node.getDownstreamPort(portName);
+      this.node.getOutputPort(portName) ||
+      this.node.getInputPort(portName);
 
     if (!port) {
       throw new Error(`Port not found: ${portName}`);
@@ -146,10 +139,10 @@ export class DashboardComponent extends LitElement {
       throw new Error('Node not set');
     }
 
-    let port = this.node.getUpstreamPort(portName);
+    let port = this.node.getOutputPort(portName);
 
     if (!port) {
-       port = this.node.getDownstreamPort(portName);
+       port = this.node.getInputPort(portName);
     }
 
     if (!port) {

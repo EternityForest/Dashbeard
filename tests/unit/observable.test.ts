@@ -128,7 +128,7 @@ describe('Observable', () => {
       // But we only create depth limit scenario
     });
 
-    const loggedError = consoleError.mock.calls.some((call) =>
+    const _loggedError = consoleError.mock.calls.some((call) =>
       String(call[0]).includes('infinite loop')
     );
 

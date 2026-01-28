@@ -8,6 +8,7 @@ import {
 import { BoardDefinition } from '@/boards/board-types';
 
 const validBoard: BoardDefinition = {
+  id: 'simple-dashboard',
   metadata: {
     version: '1.0',
     name: 'Simple Dashboard',
@@ -67,12 +68,14 @@ const validBoard: BoardDefinition = {
   },
   bindings: [
     {
-      upstream: 'slider-control-1.value',
-      downstream: 'counter-var.value',
+      fromPort: 'slider-control-1.value',
+      toPort: 'counter-var.value',
+      id: 'binding-1',
     },
     {
-      upstream: 'slider-control-2.value',
-      downstream: 'counter-var.value',
+      fromPort: 'slider-control-2.value',
+      toPort: 'counter-var.value',
+      id: 'binding-2',
     },
   ],
 };
@@ -121,6 +124,7 @@ describe('Board Validation', () => {
 
   it('should detect duplicate component IDs', () => {
     const board: BoardDefinition = {
+      id: 'simple-dashboard',
       metadata: { version: '1.0', name: 'Test' },
       rootComponent: {
         id: 'main-layout',
@@ -135,18 +139,19 @@ describe('Board Validation', () => {
     };
 
     expect(() => {
-      validateUniqueComponentIds(board);
+      validateUniqueComponentIds(board.rootComponent!, new Set<string>());
     }).toThrow('Duplicate component ID');
   });
 
   it('should validate unique component IDs', () => {
     expect(() => {
-      validateUniqueComponentIds(validBoard);
+      validateUniqueComponentIds(validBoard.rootComponent!,new Set<string>());
     }).not.toThrow();
   });
 
   it('should detect binding from non-existent source component', () => {
     const board: BoardDefinition = {
+      id: 'simple-dashboard',
       metadata: { version: '1.0', name: 'Test' },
       rootComponent: {
         id: 'main-layout',
@@ -159,8 +164,9 @@ describe('Board Validation', () => {
       },
       bindings: [
         {
-          upstream: 'missing.value',
-          downstream: 'comp1.value',
+          fromPort: 'missing.value',
+          toPort: 'comp1.value',
+          id: 'binding-1',
         },
       ],
     };
@@ -172,6 +178,7 @@ describe('Board Validation', () => {
 
   it('should detect binding to non-existent target component', () => {
     const board: BoardDefinition = {
+      id: 'simple-dashboard',
       metadata: { version: '1.0', name: 'Test' },
       rootComponent: {
         id: 'main-layout',
@@ -184,8 +191,9 @@ describe('Board Validation', () => {
       },
       bindings: [
         {
-          upstream: 'comp1.value',
-          downstream: 'missing.value',
+          fromPort: 'comp1.value',
+          toPort: 'missing.value',
+          id: 'binding-1',
         },
       ],
     };
@@ -246,8 +254,9 @@ describe('Board Validation', () => {
         rootComponent: { id: 'comp1', type: 'variable', config: {} },
         bindings: [
           {
-            upstream: 'comp1.output',
-            downstream: 'missing.input',
+            fromPort: 'comp1.output',
+            toPort: 'missing.input',
+            id: 'binding-1',
           },
         ],
       });

@@ -5,16 +5,10 @@ import { Port } from '@/flow/port';
 // Simple test implementation
 class TestNode extends Node {
 
-  override getDeclaredDownstreamPorts(): Map<string, Port> {
-    const ports = new Map<string, Port>();
-    ports.set('input', new Port('input', 'any', true));
-    return ports;
-  }
-
-  override getDeclaredUpstreamPorts(): Map<string, Port> {
-    const ports = new Map<string, Port>();
-    ports.set('output', new Port('output', 'any', false));
-    return ports;
+  constructor(id: string) {
+    super(id);
+    this.addPort(new Port('input', 'any', true));
+    this.addPort(new Port('output', 'any', false));
   }
 }
 
@@ -28,10 +22,8 @@ describe('Node', () => {
   it('should initialize ports', () => {
     const node = new TestNode('node-1');
 
-    node.initializePorts();
-
-    expect(node.getDownstreamPort('input')).toBeDefined();
-    expect(node.getUpstreamPort('output')).toBeDefined();
+    expect(node.getInputPort('input')).toBeDefined();
+    expect(node.getOutputPort('output')).toBeDefined();
   });
 
 
@@ -47,8 +39,6 @@ describe('Node', () => {
 
   it('should cleanup on destroy', async () => {
     const node = new TestNode('node-1');
-
-    node.initializePorts();
     await node.onReady();
 
     await node.onDestroy();
@@ -59,22 +49,23 @@ describe('Node', () => {
   it('should get ports by name', () => {
     const node = new TestNode('node-1');
 
-    node.initializePorts();
-
-    const input = node.getDownstreamPort('input');
-    const output = node.getUpstreamPort('output');
+    const input = node.getInputPort('input');
+    const output = node.getOutputPort('output');
 
     expect(input?.name).toBe('input');
     expect(output?.name).toBe('output');
   });
 
-  it('should return undefined for missing ports', () => {
+  it('should throw for missing ports', () => {
     const node = new TestNode('node-1');
 
-    node.initializePorts();
-
-    expect(node.getDownstreamPort('missing')).toBeUndefined();
-    expect(node.getUpstreamPort('missing')).toBeUndefined();
+    expect(() => {
+      node.getInputPort('missing');
+    }).toThrow();
+    expect(() => {
+      node.getOutputPort('missing');
+    }).toThrow();
+  
   });
 
 });

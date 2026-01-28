@@ -15,7 +15,7 @@ const sampleSchema: ComponentTypeSchema = {
   displayName: 'Slider',
   category: 'input',
   description: 'A numeric slider input',
-  properties: {
+  configSchema: {
     min: {
       type: 'number',
       default: 0,
@@ -31,23 +31,7 @@ const sampleSchema: ComponentTypeSchema = {
       required: true,
       description: 'Display label',
     },
-  },
-  ports: {
-    inputs: [
-      {
-        name: 'value',
-        direction: 'input',
-        type: 'number',
-      },
-    ],
-    outputs: [
-      {
-        name: 'value',
-        direction: 'output',
-        type: 'number',
-      },
-    ],
-  },
+  }
 };
 
 describe('ComponentRegistry', () => {
@@ -173,7 +157,7 @@ describe('ComponentRegistry', () => {
     it('validates numeric constraints', () => {
       const schema: ComponentTypeSchema = {
         ...sampleSchema,
-        properties: {
+        configSchema: {
           level: {
             type: 'number',
             min: 0,
@@ -194,7 +178,7 @@ describe('ComponentRegistry', () => {
     it('validates enum values', () => {
       const schema: ComponentTypeSchema = {
         ...sampleSchema,
-        properties: {
+        configSchema: {
           theme: {
             type: 'string',
             enum: ['light', 'dark'],

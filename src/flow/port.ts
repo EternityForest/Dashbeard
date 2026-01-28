@@ -7,11 +7,10 @@ import { Observer, Observable } from '@/core/observable';
 import { PortData } from './data-types';
 import type { Node } from './node';
 
-
-export enum SourceType{
+export enum SourceType {
   Upstream,
   Downstream,
-  PortOwner
+  PortOwner,
 }
 
 /**
@@ -21,8 +20,7 @@ function isPortData(obj: unknown): obj is PortData {
   if (typeof obj !== 'object' || obj === null) return false;
   const data = obj as Record<string, unknown>;
   return (
-    typeof data.value !== 'undefined' &&
-    typeof data.timestamp === 'number'
+    typeof data.value !== 'undefined' && typeof data.timestamp === 'number'
   );
 }
 
@@ -49,8 +47,8 @@ export type PortDataHandler = (
  * A port is a connection point for data flow in the graph.
  *
  * Ports can be:
- * - **Upstream-facing**: Only connects to ONE downstream port
- * - **Downstream-facing**: Can connect to many upstream ports
+ * - **Inputs**: Only connect to one output port
+ * - **Outputs**: Can connect to many input ports
  *
  * Upstream ports are considered the source of truth for data.
  * Downstream ports are consumers of data.
@@ -72,7 +70,7 @@ export class Port {
    * True if this is a downstream-facing port (consumer).
    * False if this is an upstream-facing port (producer).
    */
-  readonly isUpstream: boolean;
+  readonly isOutput: boolean;
 
   /**
    * JSON Schema describing the data format for this port.
@@ -91,7 +89,6 @@ export class Port {
    */
   private handlers = new Set<PortDataHandler>();
 
-
   private _upstreamBindingUnsubscribers: Set<() => void> = new Set();
 
   /**
@@ -100,17 +97,17 @@ export class Port {
    */
   private lastData: PortData | null = null;
 
-  public parentNode: Node | null = null
+  public parentNode: Node | null = null;
 
   constructor(
     name: string,
     type: string,
-    isUpstream: boolean,
-    schema: PortSchema = { type: 'any' },
+    isOutput: boolean,
+    schema: PortSchema = { type: 'any' }
   ) {
     this.name = name;
     this.type = type;
-    this.isUpstream = isUpstream;
+    this.isOutput = isOutput;
     this.schema = schema;
   }
 
@@ -120,7 +117,7 @@ export class Port {
    * Upstream ports return null.
    */
   getUpstreamPort(): Port | null {
-    if (this.isUpstream) {
+    if (this.isOutput) {
       // Downstream ports can have multiple downstream connections
       return null;
     }
@@ -132,7 +129,7 @@ export class Port {
    * Check if this upstream facing port has an upstream connection.
    */
   hasConnection(): boolean {
-    if (this.isUpstream){
+    if (this.isOutput) {
       throw new Error('hasConnection() called on upstream port');
     }
     return this.upstreamConnection !== null;
@@ -152,10 +149,7 @@ export class Port {
    * @param data The new data
    * @param sourceType The source of the data
    */
-  async onNewData(
-    data: PortData,
-    sourceType: SourceType
-  ): Promise<void> {
+  async onNewData(data: PortData, sourceType: SourceType): Promise<void> {
     if (!isPortData(data)) {
       throw new Error(
         `Invalid PortData at ${this.name}: ${JSON.stringify(data)}`
@@ -168,10 +162,7 @@ export class Port {
     const handlers = Array.from(this.handlers);
     const promises = handlers.map((handler) =>
       Promise.resolve(handler(data, sourceType)).catch((err) => {
-        console.error(
-          `Error in port handler for ${this.name}:`,
-          err
-        );
+        console.error(`Error in port handler for ${this.name}:`, err);
       })
     );
 
@@ -206,13 +197,11 @@ export class Port {
    * @returns Function to unregister handler
    */
   addDataHandler(handler: PortDataHandler): () => void {
-
     this.handlers.add(handler);
     return () => {
       this.handlers.delete(handler);
     };
   }
-
 
   getFullName(): string {
     return `${this.name} (${this.type})`;
@@ -221,8 +210,8 @@ export class Port {
    * Establish a connection between ports.
    * Called by NodeGraph during binding creation.
    * */
-  async connectToUpstream(upstreamPort: Port): Promise<void> {
-    await upstreamPort.connectToDownstream(this);
+  async connectToOutput(upstreamPort: Port): Promise<void> {
+    await upstreamPort.connectToInput(this);
   }
 
   /**
@@ -231,16 +220,14 @@ export class Port {
    *
    * @param downstreamPort The port to connect to
    */
-  async connectToDownstream(downstreamPort: Port): Promise<void> {
+  async connectToInput(downstreamPort: Port): Promise<void> {
     // Validate that this is an upstream port
-    if (!this.isUpstream) {
-      throw new Error(
-        `${this.getFullName()} is not a downstream-facing port`
-      );
+    if (!this.isOutput) {
+      throw new Error(`${this.getFullName()} is not a downstream-facing port`);
     }
 
     // Validate that target is a downstream port
-    if (downstreamPort.isUpstream) {
+    if (downstreamPort.isOutput) {
       throw new Error(
         `Cannot connect to downstream-facing port ${downstreamPort.getFullName()}`
       );
@@ -254,25 +241,25 @@ export class Port {
       );
     }
 
-    if(this.type && downstreamPort.type && this.type !== downstreamPort.type){
+    if (this.type && downstreamPort.type && this.type !== downstreamPort.type) {
       throw new Error(
         `Port type mismatch: ${this.getFullName()} (${this.type}) ` +
           `→ ${downstreamPort.getFullName()} (${downstreamPort.type})`
-      )
+      );
     }
 
-    if(downstreamPort === this){
+    if (downstreamPort === this) {
       throw new Error(
         `Cannot connect to self: ${downstreamPort.getFullName()}`
       );
     }
 
-    if(downstreamPort.upstreamConnection !== null){
+    if (downstreamPort.upstreamConnection !== null) {
       console.warn(
         `Upstream port ${this.name} already connected ` +
           `to ${downstreamPort.upstreamConnection.getFullName()}`
       );
-      if(downstreamPort.upstreamConnection !== this){
+      if (downstreamPort.upstreamConnection !== this) {
         throw new Error(
           `Upstream port ${this.name} already connected ` +
             `to ${downstreamPort.upstreamConnection.getFullName()}`
@@ -284,35 +271,26 @@ export class Port {
     downstreamPort.upstreamConnection = this;
 
     // Add data propagation handler on UPSTREAM to send to downstream
-    const x = this.addDataHandler(
-      async (data, sourceType) => {
-        if (sourceType === SourceType.Downstream) return;
-        await downstreamPort.onNewData(data, 
-          SourceType.Upstream
-        );
-      }
-    );
+    const x = this.addDataHandler(async (data, sourceType) => {
+      if (sourceType === SourceType.Downstream) return;
+      await downstreamPort.onNewData(data, SourceType.Upstream);
+    });
     this._upstreamBindingUnsubscribers.add(x);
 
-    const y = downstreamPort.addDataHandler(
-      async (data, sourceType) => {
-        // Don't make a loop.
-        if(sourceType === SourceType.Upstream) return;
-        await this.onNewData(data, 
-          SourceType.Downstream);
-      }
-    );
+    const y = downstreamPort.addDataHandler(async (data, sourceType) => {
+      // Don't make a loop.
+      if (sourceType === SourceType.Upstream) return;
+      await this.onNewData(data, SourceType.Downstream);
+    });
     this._upstreamBindingUnsubscribers.add(y);
 
     // If we have last data, propagate it to downstream
     if (this.lastData !== null) {
-      await downstreamPort.onNewData(this.lastData, SourceType.PortOwner).catch(
-        (err) => {
-          console.error(
-            `Error propagating data on connect: ${String(err)}`
-          );
-        }
-      );
+      await downstreamPort
+        .onNewData(this.lastData, SourceType.PortOwner)
+        .catch((err) => {
+          console.error(`Error propagating data on connect: ${String(err)}`);
+        });
     }
   }
 
@@ -320,11 +298,11 @@ export class Port {
    * Disconnect this port from its upstream connection.
    */
   disconnectFromUpstream(): void {
-    if(this.isUpstream){
+    if (this.isOutput) {
       throw new Error('disconnectFromUpstream() called on downstream port');
     }
 
-    for(const unsub of this._upstreamBindingUnsubscribers){
+    for (const unsub of this._upstreamBindingUnsubscribers) {
       unsub();
     }
 
@@ -338,7 +316,7 @@ export class Port {
    */
   destroy(): void {
     this.handlers.clear();
-     for(const unsub of this._upstreamBindingUnsubscribers){
+    for (const unsub of this._upstreamBindingUnsubscribers) {
       unsub();
     }
     this.upstreamConnection = null;
