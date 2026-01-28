@@ -100,6 +100,7 @@ export class LoadedBinding {
       filter.destroy();
     }
     this.filters = [];
+    this.disconnect();
   }
 
   /**
@@ -163,8 +164,9 @@ export class LoadedBinding {
   }
 
   disconnect() {
-    const port = this.sourceNode.getOutputPort(this.sourcePortName);
-
-    port.disconnectFromUpstream();
+    if(this.filters.length > 0) {
+      this.filters[0].node.outputPort?.disconnectFromOutput();
+    }
+    this.destinationNode.getInputPort(this.destinationPortName)?.disconnectFromOutput();
   }
 }

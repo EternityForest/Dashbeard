@@ -187,7 +187,7 @@ export class NodeGraph {
     if (upstreamNode) {
       const port = upstreamNode.getOutputPort(binding.fromPort.split('.')[1]);
       if (port) {
-        port.disconnectFromUpstream();
+        port.disconnectFromOutput();
       }
     }
   }

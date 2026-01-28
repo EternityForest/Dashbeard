@@ -358,8 +358,9 @@ export class BindingsEditor extends LitElement {
     const runtime = this.getRuntime();
     if (runtime) {
       try {
-        await runtime.deleteBinding(binding.fromPort, binding.toPort);
+        runtime.getGraph().deleteBinding(binding);
       } catch (err) {
+        alert(`Failed to delete binding in runtime: ${err}`);
         console.warn(`Failed to delete binding in runtime: ${err}`);
       }
     }
@@ -401,36 +402,29 @@ export class BindingsEditor extends LitElement {
       return;
     }
 
+    // Create binding
     const newBinding: BindingDefinition = {
       id: `binding-${Date.now()}`,
       fromPort: fromPort,
       toPort: toPort,
-      filters: filters
-    }
+      ...(filters && filters.length > 0 && { filters }),
+    };
     // Create in runtime first
     const runtime = this.getRuntime();
     if (runtime) {
       try {
         // For now, create binding without filters in runtime
         // Filter wiring will happen when the full binding is created
-        await runtime.getGraph().loadBinding(newBinding);
-        board.bindings.push(newBinding);
-        
+        await runtime.getGraph().loadBinding(newBinding);        
       } catch (err) {
         alert(`Failed to create binding: ${err.toString()}`);
         return;
       }
     }
 
-    // Create binding
-    const binding: BindingDefinition = {
-      id: `binding-${Date.now()}`,
-      fromPort: fromPort,
-      toPort: toPort,
-      ...(filters && filters.length > 0 && { filters }),
-    };
 
-    board.bindings.push(binding);
+
+    board.bindings.push(newBinding);
     this.editorState.board.set(board);
     this.editorState.markDirty();
     this.updateBindings();

@@ -125,7 +125,7 @@ describe('Port', () => {
 
     await upstream.connectToInput(downstream);
 
-    downstream.disconnectFromUpstream();
+    downstream.disconnectFromOutput();
 
     expect(downstream.getUpstreamPort()).toBeNull();
     expect(downstream.hasConnection()).toBe(false);

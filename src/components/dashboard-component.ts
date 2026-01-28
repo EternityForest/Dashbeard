@@ -139,14 +139,11 @@ export class DashboardComponent extends LitElement {
       throw new Error('Node not set');
     }
 
-    let port = this.node.getOutputPort(portName);
+    const port = this.node.allPorts.get(portName);
+
 
     if (!port) {
-       port = this.node.getInputPort(portName);
-    }
-
-    if (!port) {
-      throw new Error(`Output port not found: ${portName}`);
+      throw new Error(`Port not found: ${portName}`);
     }
 
     const { createPortData } = await import('@/flow/data-types');

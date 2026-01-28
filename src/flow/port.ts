@@ -275,14 +275,14 @@ export class Port {
       if (sourceType === SourceType.Downstream) return;
       await downstreamPort.onNewData(data, SourceType.Upstream);
     });
-    this._upstreamBindingUnsubscribers.add(x);
+    downstreamPort._upstreamBindingUnsubscribers.add(x);
 
     const y = downstreamPort.addDataHandler(async (data, sourceType) => {
       // Don't make a loop.
       if (sourceType === SourceType.Upstream) return;
       await this.onNewData(data, SourceType.Downstream);
     });
-    this._upstreamBindingUnsubscribers.add(y);
+    downstreamPort._upstreamBindingUnsubscribers.add(y);
 
     // If we have last data, propagate it to downstream
     if (this.lastData !== null) {
@@ -297,9 +297,9 @@ export class Port {
   /**
    * Disconnect this port from its upstream connection.
    */
-  disconnectFromUpstream(): void {
+  disconnectFromOutput(): void {
     if (this.isOutput) {
-      throw new Error('disconnectFromUpstream() called on downstream port');
+      throw new Error('disconnectFromOutput() called on input port');
     }
 
     for (const unsub of this._upstreamBindingUnsubscribers) {

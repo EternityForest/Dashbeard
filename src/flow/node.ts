@@ -31,6 +31,8 @@ export class Node {
    */
   public outputPorts: Map<string, Port> = new Map();
 
+  public allPorts: Map<string, Port> = new Map();
+
   /**
    * Whether this node is currently active and running.
    */
@@ -63,6 +65,7 @@ export class Node {
     } else {
       this.outputPorts.set(port.name, port);
     }
+    this.allPorts.set(port.name, port);
     return port;
   } 
 
