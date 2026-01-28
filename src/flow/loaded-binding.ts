@@ -59,7 +59,7 @@ export class LoadedBinding {
     // Instantiate filters if present
     if (binding.filters && binding.filters.length > 0) {
       let currentType =
-        upstreamNode.getInputPort(upstreamPortName)?.type || 'any';
+        upstreamNode.getOutputPort(upstreamPortName)?.type || 'any';
 
       for (let i = 0; i < binding.filters.length; i++) {
         const filterDef = binding.filters[i];
@@ -139,18 +139,7 @@ export class LoadedBinding {
     return currentType;
   }
 
-  /**
-   * Create a binding between two ports.
-   * Validates:
-   * - Both nodes exist
-   * - Both ports exist
-   * - Port types are compatible
-   * - Creates no cycles
-   * - Upstream port not already connected
-   *
-   * @param upstreamPort The upstream port to connect
-   * @param downstreamPort The downstream port to connect
-   */
+
   async doConnect(): Promise<void> {
     const port = this.sourceNode.getOutputPort(this.sourcePortName);
     const destinationPort = this.destinationNode.getInputPort(

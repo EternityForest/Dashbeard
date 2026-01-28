@@ -90,7 +90,7 @@ export class VariableComponent extends DashboardComponent {
       this.label = (config.config.label as string) || 'Variable';
 
       // Check if type changed - requires recreation with new port
-      const currentPort = this.node.getInputPort('value');
+      const currentPort = this.node.getOutputPort('value');
       const newType = config.config.type as string;
 
       if (currentPort && currentPort.type !== newType) {

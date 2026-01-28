@@ -221,7 +221,7 @@ export class BindingsEditor extends LitElement {
     if (!node) return [];
 
     // Get actual output ports (downstream-facing ports on the node)
-    const ports = Array.from(node.inputPorts.values());
+    const ports = Array.from(node.outputPorts.values());
     return ports.map((port) => ({
       name: port.name,
       type: port.type,
@@ -241,7 +241,7 @@ export class BindingsEditor extends LitElement {
     if (!node) return [];
 
     // Get actual input ports (upstream-facing ports on the node)
-    const ports = Array.from(node.getDeclaredOutputPorts().values());
+    const ports = Array.from(node.inputPorts.values());
     return ports.map((port) => ({
       name: port.name,
       type: port.type,
@@ -261,7 +261,7 @@ export class BindingsEditor extends LitElement {
     const sourceNode = runtime.getNode(sourceComponentId);
     if (!sourceNode) return [];
 
-    const sourcePort = sourceNode.getInputPort(sourcePortName);
+    const sourcePort = sourceNode.getOutputPort(sourcePortName);
     if (!sourcePort) return [];
 
     const compatible: Array<{
@@ -276,10 +276,11 @@ export class BindingsEditor extends LitElement {
       const targetNode = runtime.getNode(component.id);
       if (!targetNode) continue;
 
-      for (const port of targetNode.getDeclaredOutputPorts().values()) {
+      for (const port of targetNode.inputPorts.values()) {
         if (
           sourcePort.type === port.type ||
-          sourcePort.type === 'any' ||
+          port.type.startsWith(sourcePort.type) ||
+          sourcePort.type.startsWith(port.type) ||
           port.type === 'any'
         ) {
           compatible.push({
@@ -307,7 +308,7 @@ export class BindingsEditor extends LitElement {
     const targetNode = runtime.getNode(targetComponentId);
     if (!targetNode) return [];
 
-    const targetPort = targetNode.getOutputPort(targetPortName);
+    const targetPort = targetNode.getInputPort(targetPortName);
     if (!targetPort) return [];
 
     const compatible: Array<{
@@ -322,10 +323,11 @@ export class BindingsEditor extends LitElement {
       const sourceNode = runtime.getNode(component.id);
       if (!sourceNode) continue;
 
-      for (const port of sourceNode.inputPorts.values()) {
+      for (const port of sourceNode.outputPorts.values()) {
         if (
           port.type === targetPort.type ||
-          port.type === 'any' ||
+          port.type.startsWith(targetPort.type) ||
+          targetPort.type.startsWith(port.type) ||
           targetPort.type === 'any'
         ) {
           compatible.push({

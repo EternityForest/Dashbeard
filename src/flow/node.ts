@@ -55,15 +55,6 @@ export class Node {
     this.outputPorts.clear();
   }
 
-  /**
-   * Get all declared upstream-facing ports.
-   * Subclasses must declare all ports upfront.
-   *
-   * @returns Map of port name to Port
-   */
-  getDeclaredOutputPorts(): Map<string, Port> {
-    return this.outputPorts;
-  }
 
   addPort(port: Port): Port {
     port.parentNode = this;
