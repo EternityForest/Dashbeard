@@ -99,6 +99,9 @@ export interface BoardDefinition {
   settings?: {
     theme?: 'light' | 'dark';
   };
+
+  /** Path to CSS theme file (relative to board resources) */
+  cssTheme?: string;
 }
 
 /**
@@ -177,6 +180,10 @@ export const BOARD_SCHEMA: Record<string, unknown> = {
           enum: ['light', 'dark'],
         },
       },
+    },
+    cssTheme: {
+      type: 'string',
+      description: 'Path to CSS theme file',
     },
   },
   required: ['metadata', 'rootComponent', 'bindings'],

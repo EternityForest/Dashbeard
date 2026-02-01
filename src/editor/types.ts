@@ -36,6 +36,9 @@ export interface ConfigSchema {
   maximum?: number;
   description?: string;
   items?: ConfigSchema;
+  format?: string;
+  pattern?: string;
+  fileFilter?: string;
   [key: string]: unknown;
 }
 

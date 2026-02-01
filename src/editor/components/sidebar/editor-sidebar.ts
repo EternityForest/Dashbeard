@@ -10,6 +10,7 @@ import { EditorState } from '../../editor-state';
 import './component-tree';
 import './property-inspector';
 import './bindings-editor';
+import './theme-settings';
 
 /**
  * Editor sidebar container.
@@ -46,6 +47,15 @@ export class EditorSidebar extends LitElement {
 
     return html`
       <div class="sidebar-content accordion">
+        <!-- Theme Settings Panel -->
+        <details>
+          <summary>Theme</summary>
+          <div class="panel-content">
+            <ds-editor-theme-settings .editorState="${this.editorState}">
+            </ds-editor-theme-settings>
+          </div>
+        </details>
+
         <!-- Component Tree Panel -->
         <details>
           <summary>Components</summary>

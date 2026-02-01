@@ -5,6 +5,7 @@
 
 import { html, TemplateResult } from 'lit';
 import type { ConfigSchema } from '../types';
+import '../components/resource-browser';
 
 /**
  * Form field change callback.
@@ -76,7 +77,7 @@ export function schemaToFormField(
 }
 
 /**
- * Render string property as text input or select.
+ * Render string property as text input, select, or file resource browser.
  */
 function renderStringField(
   name: string,
@@ -85,6 +86,24 @@ function renderStringField(
   onChange: FormFieldChange
 ): TemplateResult {
   const stringValue = String(value || '');
+
+  // File format: render as resource browser
+  if (schema.format === 'file') {
+    const fileFilter = typeof schema.pattern === 'string'
+      ? schema.pattern
+      : schema.fileFilter || '';
+
+    return html`
+      <ds-resource-browser
+        .value="${stringValue}"
+        .label="${formatName(name)}"
+        .fileFilter="${fileFilter}"
+        .onChange="${(path: string) => onChange(path)}"
+        module="example"
+        resource="example"
+      ></ds-resource-browser>
+    `;
+  }
 
   // Enum: render as select dropdown
   if (schema.enum && Array.isArray(schema.enum)) {

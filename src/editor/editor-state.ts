@@ -40,6 +40,12 @@ export class EditorState {
 
   readonly nodeGraphChanged : Observable<null>;
 
+  /**
+   * Path to CSS theme file for the dashboard.
+   * Empty string uses default (barrel.css).
+   */
+  readonly cssTheme: Observable<string>;
+
   public readonly editorComponent: DashboardEditor;
 
   constructor(editor: DashboardEditor) {
@@ -49,6 +55,7 @@ export class EditorState {
     >;
     this.isDirty = new Observable(false);
     this.editMode = new Observable(true);
+    this.cssTheme = new Observable('');
 
     this.editorComponent = editor;
     this.nodeGraphChanged = editor.renderer.runtime.nodeGraphRefreshed;
@@ -166,5 +173,22 @@ export class EditorState {
    */
   setEditMode(enabled: boolean): void {
     this.editMode.set(enabled);
+  }
+
+  /**
+   * Set the CSS theme for the dashboard.
+   *
+   * @param themePath Path to CSS theme file or empty string for default
+   */
+  setCSSTheme(themePath: string): void {
+    this.cssTheme.set(themePath);
+    this.markDirty();
+
+    // Apply theme to currently loaded board
+    const board = this.board.get();
+    if (board) {
+      board.cssTheme = themePath;
+      this.board.set(board);
+    }
   }
 }
