@@ -3,14 +3,13 @@
  * Coordinates component creation, data flow, and cleanup.
  */
 
-import { Node } from '@/flow/node';
-import { NodeGraph } from '@/flow/node-graph';
-import { BoardDefinition } from '@/boards/board-types';
-import { validateBoardComplete } from '@/boards/board-validator';
-import { DashboardComponent } from '@/components/dashboard-component';
-import type { ComponentConfig } from '@/boards/board-types';
-import { Observable } from '@/core/observable';
-import { LoadedBinding } from '@/flow/loaded-binding';
+import { Node } from '../flow/node';
+import { NodeGraph } from '../flow/node-graph';
+import { BoardDefinition } from '../boards/board-types';
+import { validateBoardComplete } from '../boards/board-validator';
+import { DashboardComponent } from '../components/dashboard-component';
+import type { ComponentConfig } from '../boards/board-types';
+import { Observable } from '../core/observable';
 /**
  * Maps board component types to their Node implementations.
  * Populated at runtime to support custom components.

@@ -7,7 +7,7 @@
 import type {
   BoardDefinition,
   IBoardBackend,
-} from './types';
+} from '../editor/types';
 
 /**
  * In-memory storage backend.

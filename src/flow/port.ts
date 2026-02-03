@@ -3,7 +3,7 @@
  * Ports are the mechanism for connecting nodes together.
  */
 
-import { Observer, Observable } from '@/core/observable';
+import { Observer, Observable } from '../core/observable';
 import { PortData } from './data-types';
 import type { Node } from './node';
 

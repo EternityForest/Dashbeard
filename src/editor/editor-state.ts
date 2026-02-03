@@ -3,7 +3,7 @@
  * Provides reactive state for the dashboard editor.
  */
 
-import { Observable } from '@/core/observable';
+import { Observable } from '../core/observable';
 import type { BoardDefinition } from './types';
 import type { DashboardEditor } from './components/dashboard-editor';
 import type { Component } from './types';
@@ -40,13 +40,9 @@ export class EditorState {
 
   readonly nodeGraphChanged : Observable<null>;
 
-  /**
-   * Path to CSS theme file for the dashboard.
-   * Empty string uses default (barrel.css).
-   */
-  readonly cssTheme: Observable<string>;
 
   public readonly editorComponent: DashboardEditor;
+
 
   constructor(editor: DashboardEditor) {
     this.board = new Observable(null) as Observable<BoardDefinition | null>;
@@ -54,8 +50,8 @@ export class EditorState {
       string | null
     >;
     this.isDirty = new Observable(false);
-    this.editMode = new Observable(true);
-    this.cssTheme = new Observable('');
+    this.editMode = new Observable(false);
+
 
     this.editorComponent = editor;
     this.nodeGraphChanged = editor.renderer.runtime.nodeGraphRefreshed;
@@ -181,7 +177,7 @@ export class EditorState {
    * @param themePath Path to CSS theme file or empty string for default
    */
   setCSSTheme(themePath: string): void {
-    this.cssTheme.set(themePath);
+    this.editorComponent.renderer?.cssTheme.set(themePath);
     this.markDirty();
 
     // Apply theme to currently loaded board

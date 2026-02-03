@@ -7,8 +7,8 @@ import { LitElement, html, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { EditorState } from '../../editor-state';
 import type { BindingDefinition, Component } from '../../types';
-import type { BoardRuntime } from '@/runtime';
-import { filterRegistry } from '@/flow/filter';
+import type { BoardRuntime } from '../../../runtime';
+import { filterRegistry } from '../../../flow/filter';
 
 /**
  * Bindings editor for connecting component ports.

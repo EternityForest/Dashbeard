@@ -5,12 +5,12 @@
 
 import { LitElement, html, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { BoardRuntime } from '@/runtime';
-import { BoardDefinition } from '@/boards/board-types';
+import { BoardRuntime } from '../runtime';
+import { BoardDefinition } from '../boards/board-types';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { BUILT_IN_COMPONENTS } from '@/components/built-in';
+import { BUILT_IN_COMPONENTS } from '../components/built-in';
 import type { DashboardComponent } from './dashboard-component';
-
+import { Observable } from '../core/observable';
 /**
  * DashboardRenderer - renders a board definition as interactive UI.
  */
@@ -37,6 +37,11 @@ export class DashboardRenderer extends LitElement {
   @property({ type: Boolean }) isLoaded: boolean = false;
 
   /**
+   * Path to CSS theme file for the dashboard.
+   * Empty string uses default (barrel.css).
+   */
+  readonly cssTheme: Observable<string> = new Observable('');
+  /**
    * Load a board definition.
    */
   async loadBoard(boardDef: BoardDefinition): Promise<void> {
@@ -62,6 +67,14 @@ export class DashboardRenderer extends LitElement {
     this.renderRoot
       ?.querySelector('#dashboard-content')
       ?.replaceChildren(this.runtime.rootComponent);
+  }
+
+
+  constructor() {
+    super();
+    this.cssTheme.subscribe((_cssTheme) => {
+      this.requestUpdate(); 
+    })
   }
 
   /**
@@ -109,7 +122,9 @@ export class DashboardRenderer extends LitElement {
     }
 
     if (!this.isLoaded) {
-      return html`<div class="renderer-error highlight">Loading dashboard...</div>`;
+      return html`<div class="renderer-error highlight">
+        Loading dashboard...
+      </div>`;
     }
 
     if (!this.runtime.rootComponent) {
@@ -118,6 +133,7 @@ export class DashboardRenderer extends LitElement {
 
     return html`
       <div class="dashboard" @click=${this.clickHandler.bind(this)}>
+        <link rel="stylesheet" type="text/css" href="${this.cssTheme.get()}" />
         <div class="dashboard-content" id="dashboard-content"></div>
       </div>
     `;
@@ -135,11 +151,13 @@ export class DashboardRenderer extends LitElement {
     // get the component that was clicked
     const path = event.composedPath() as Element[];
 
-    for(let i = 0; i < path.length; i++) {
-        if ((path[i] as DashboardComponent|null)?.componentConfig?.id) {
-          this.runtime.onComponentClick((path[i] as DashboardComponent|null)?.componentConfig.id);
-          break;
-        }
+    for (let i = 0; i < path.length; i++) {
+      if ((path[i] as DashboardComponent | null)?.componentConfig?.id) {
+        this.runtime.onComponentClick(
+          (path[i] as DashboardComponent | null)?.componentConfig.id
+        );
+        break;
+      }
     }
   }
   /**
@@ -149,9 +167,8 @@ export class DashboardRenderer extends LitElement {
     super.disconnectedCallback();
     void this.runtime.unloadBoard();
   }
-  
+
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     return this; // Renders to the element's light DOM
   }
-
 }

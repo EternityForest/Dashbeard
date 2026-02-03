@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   MemoryBackend,
   LocalStorageBackend,
-} from '@/editor/board-storage';
+} from '@/backends';
 import type { Board } from '@/editor/types';
 
 const sampleBoard: Board = {

@@ -37,8 +37,7 @@ export class ResourceBrowser extends LitElement {
   /**
    * Module and resource identifiers for backend API calls.
    */
-  @property({ type: String }) module: string = '';
-  @property({ type: String }) resource: string = '';
+  @property({ type: String }) boardId: string = '';
 
   /**
    * File extension regex filter (e.g., '\.(css|scss)$')
@@ -495,14 +494,14 @@ export class ResourceBrowser extends LitElement {
   }
 
   private async loadFolder(folder: string): Promise<void> {
-    if (!this.module || !this.resource) {
-      this.error = 'Module and resource not configured';
+    if (!this.boardId) {
+      this.error = 'No board selected';
       return;
     }
 
     try {
       this.loading = true;
-      const url = `/api/dashboards/${this.module}/${this.resource}/files/list?subfolder=${encodeURIComponent(folder)}`;
+      const url = `/api/dashboards/${this.boardId}/files/list?subfolder=${encodeURIComponent(folder)}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -569,7 +568,7 @@ export class ResourceBrowser extends LitElement {
       formData.append('file', file);
 
       const response = await fetch(
-        `/api/dashboards/${this.module}/${this.resource}/files/upload`,
+        `/api/dashboards/${this.boardId}/files/upload`,
         {
           method: 'POST',
           body: formData,

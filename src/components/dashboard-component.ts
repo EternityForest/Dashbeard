@@ -5,11 +5,11 @@
 
 import { LitElement, html, css, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
-import { Node } from '@/flow/node';
-import { PortData } from '@/flow/data-types';
-import type { ComponentConfig } from '@/boards/board-types';
-import type { ComponentTypeSchema } from '@/editor';
-import { SourceType } from '@/flow/port';
+import { Node } from '../flow/node';
+import { PortData } from '../flow/data-types';
+import type { ComponentConfig } from '../boards/board-types';
+import type { ComponentTypeSchema } from '../editor';
+import { SourceType } from '../flow/port';
 /**
  * Base class for dashboard components.
  * Each component:
@@ -146,7 +146,7 @@ export class DashboardComponent extends LitElement {
       throw new Error(`Port not found: ${portName}`);
     }
 
-    const { createPortData } = await import('@/flow/data-types');
+    const { createPortData } = await import('../flow/data-types');
     const data = createPortData(value);
     await port.onNewData(data, SourceType.PortOwner);
   }

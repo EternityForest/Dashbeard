@@ -10,8 +10,7 @@
 import { Node } from './node';
 import type { BindingDefinition } from '../boards/board-types';
 import { LoadedBinding } from './loaded-binding';
-import { Filter, filterRegistry } from '@/flow/filter';
-import { Observable } from '@/core/observable';
+import { Observable } from '../core/observable';
 /**
  * NodeGraph manages all nodes and their connections in the data flow system.
  * Enforces invariants:

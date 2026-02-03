@@ -21,7 +21,6 @@ export type {
 export type {
   PortSchema,
   ComponentTypeSchema,
-  PropertySchema,
   IBoardBackend,
   ComponentRegistryEntry,
   ValidationResult,
@@ -34,16 +33,13 @@ export {
   resetComponentRegistry,
 } from './component-registry';
 
-// Binding validation for data flow integrity
-export { BindingValidator } from './binding-validator';
-
 // Storage backends for persistence
 export {
   MemoryBackend,
   LocalStorageBackend,
   ApiBackend,
   CompositeBackend,
-} from './board-storage';
+} from '../backends';
 
 // Editor state management
 export { EditorState } from './editor-state';

@@ -6,10 +6,9 @@ import Ajv from 'ajv';
 import {
   BoardDefinition,
   BOARD_SCHEMA,
-  ComponentConfig,
-  BindingDefinition,
+  ComponentConfig
 } from './board-types';
-import { filterRegistry } from '@/flow/filter';
+import { filterRegistry } from '../flow/filter';
 
 const ajv = new Ajv({ strict: false });
 const validateBoardSchema = ajv.compile(BOARD_SCHEMA);

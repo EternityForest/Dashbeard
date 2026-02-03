@@ -2,15 +2,15 @@
  * Slider component - numeric range input.
  */
 
-import { html, TemplateResult, css } from 'lit';
+import { html, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { DashboardComponent } from '../dashboard-component';
-import { doSerialized } from '@/core/serialized-actions';
-import type { ComponentConfig } from '@/boards/board-types';
-import type { ComponentTypeSchema } from '@/editor/types';
-import { Port } from '@/flow/port';
-import type { PortData } from '@/flow/data-types';
-import type { SourceType } from '@/flow/port';
+import { doSerialized } from '../../core/serialized-actions';
+import type { ComponentConfig } from '../../boards/board-types';
+import type { ComponentTypeSchema } from '../../editor/types';
+import { Port } from '../../flow/port';
+import type { PortData } from '../../flow/data-types';
+import type { SourceType } from '../../flow/port';
 /**
  * Slider component - numeric range input for selecting values within bounds.
  */

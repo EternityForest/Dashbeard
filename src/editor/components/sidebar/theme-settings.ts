@@ -129,56 +129,11 @@ export class ThemeSettings extends LitElement {
       </div>`;
     }
 
-    const currentTheme = this.editorState.cssTheme.get() || '';
+    const currentTheme = this.editorState.board.get()?.cssTheme || '';
 
     return html`
       <div class="section">
         <div class="section-title">Global Theme</div>
-
-        <div class="theme-group">
-          <!-- Default Theme -->
-          <div
-            class="theme-option ${currentTheme === '' ? 'selected' : ''}"
-            @click="${() => this.setTheme('')}"
-          >
-            <div class="radio-btn"></div>
-            <div>
-              <div class="theme-name">Default (Barrel)</div>
-              <div class="theme-description">
-                Standard dashboard theme
-              </div>
-            </div>
-          </div>
-
-          <!-- Builtin Themes -->
-          <div
-            class="theme-option ${currentTheme === '/static/dashbeard/css/dark.css' ? 'selected' : ''}"
-            @click="${() => this.setTheme('/static/dashbeard/css/dark.css')}"
-          >
-            <div class="radio-btn"></div>
-            <div>
-              <div class="theme-name">Dark Theme</div>
-              <div class="theme-description">
-                Dark color scheme
-              </div>
-            </div>
-          </div>
-
-          <div
-            class="theme-option ${currentTheme === '/static/dashbeard/css/light.css' ? 'selected' : ''}"
-            @click="${() => this.setTheme('/static/dashbeard/css/light.css')}"
-          >
-            <div class="radio-btn"></div>
-            <div>
-              <div class="theme-name">Light Theme</div>
-              <div class="theme-description">
-                Light color scheme
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
 
         <!-- Custom Theme -->
         <div class="custom-theme">
@@ -186,10 +141,9 @@ export class ThemeSettings extends LitElement {
           <ds-resource-browser
             .value="${currentTheme}"
             .label="CSS File"
-            .fileFilter="\\.css\$"
+            .fileFilter="\\.css$"
             .onChange="${(path: string) => this.setTheme(path)}"
-            module="example"
-            resource="example"
+            .boardId="${this.editorState.board.get()?.id || ''}"
           ></ds-resource-browser>
         </div>
       </div>

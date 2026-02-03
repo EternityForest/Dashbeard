@@ -10,6 +10,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "dashbeard": path.resolve(__dirname, "./src"),
     },
   },
   build: {
@@ -21,6 +22,9 @@ export default defineConfig({
       input: {
         "editor-example": resolve(__dirname, 'examples/editor-example.html'),
       example: resolve(__dirname, 'examples/index.html'),
+
+      lightTheme: resolve(__dirname, 'src/styles/light.css'),
+      darkTheme: resolve(__dirname, 'src/styles/dark.css'),
       },
       output: {
         manualChunks: {

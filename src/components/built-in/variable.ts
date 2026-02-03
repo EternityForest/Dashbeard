@@ -6,13 +6,13 @@
 import { html, TemplateResult, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { DashboardComponent } from '../dashboard-component';
-import type { ComponentConfig } from '@/boards/board-types';
-import type { ComponentTypeSchema } from '@/editor/types';
-import { doSerialized } from '@/core/serialized-actions';
+import type { ComponentConfig } from '../../boards/board-types';
+import type { ComponentTypeSchema } from '../../editor/types';
+import { doSerialized } from '../../core/serialized-actions';
 
-import { Port } from '@/flow/port';
-import type { PortData } from '@/flow/data-types';
-import { SourceType } from '@/flow/port';
+import { Port } from '../../flow/port';
+import type { PortData } from '../../flow/data-types';
+import { SourceType } from '../../flow/port';
 
 /**
  * Variable component - simple storage and output of values.
