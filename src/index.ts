@@ -52,12 +52,19 @@ export const defaultBoard = {
 };
 
 export function createEditor(
-  editorElement: HTMLElement,
+  container: HTMLElement,
   backend: IBoardBackend,
-  editMode: boolean
-) {
+  editMode: boolean,
+): DashboardEditor {
+
+
+  // Create editor element
+  const editorElement = document.createElement('ds-dashboard-editor');
+  container.appendChild(editorElement);
+
   // Create editor instance
   const editor = editorElement as DashboardEditor;
+  
   // Configure editor
   editor.backend = backend;
 
@@ -65,10 +72,11 @@ export function createEditor(
 
   // Load sample board
   (async () => {
-    await backend.create(defaultBoard);
     editor.setBoard(defaultBoard);
   })().catch(() => {
     console.error('Failed to create board');
     alert('Failed to create board');
   });
+
+  return editor;
 }

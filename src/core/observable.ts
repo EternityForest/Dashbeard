@@ -97,7 +97,6 @@ export class Observable<T> {
    */
   subscribe(observer: Observer<T>): Unsubscribe {
     this.observers.add(observer);
-    observer(this.value);
 
     return () => {
       this.observers.delete(observer);

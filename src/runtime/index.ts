@@ -96,6 +96,10 @@ export class BoardRuntime {
     const validated = validateBoardComplete(boardDef);
     this.board = validated;
 
+    await this.graph.clear();
+    this.nodes.clear();
+    this.loadedComponents.clear();
+
     if (validated.rootComponent) {
       // Create all nodes, starting at the root
       this.rootComponent = this.loadComponent(validated.rootComponent);
@@ -103,7 +107,7 @@ export class BoardRuntime {
 
     // Establish all bindings (including filter stacks)
     for (const binding of validated.bindings) {
-      await this.loadBinding(binding);
+      await this.graph.loadBinding(binding);
     }
 
     // Initialize all nodes

@@ -98,15 +98,6 @@ export class DashboardEditor extends LitElement {
     const container = this.renderRoot?.querySelector('#renderer-container');
     if (container) {
       container.appendChild(this.renderer);
-
-      // Load board if already loaded
-      const board = this.editorState.board.get();
-      if (board) {
-        this.loadBoardInRenderer(board).catch((err: Error) => {
-          this.error = `Failed to render board: ${err.message}`;
-          console.error(err);
-        });
-      }
     }
   }
 

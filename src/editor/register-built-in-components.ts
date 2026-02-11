@@ -4,9 +4,9 @@
  */
 
 import { getComponentRegistry } from './component-registry';
-import { SliderComponent } from '@/components/built-in/slider';
-import { VariableComponent } from '@/components/built-in/variable';
-import { FlexLayoutComponent } from '@/components/built-in/flex-layout';
+import { SliderComponent } from '../components/built-in/slider';
+import { VariableComponent } from '../components/built-in/variable';
+import { FlexLayoutComponent } from '../components/built-in/flex-layout';
 
 /**
  * Register all built-in components with the editor.
