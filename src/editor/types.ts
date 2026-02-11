@@ -72,14 +72,20 @@ export interface ComponentTypeSchema {
 }
 
 /**
- * Storage backend abstraction.
- * Different implementations can persist boards in
- * different ways (filesystem, database, cloud, etc).
+ * Storage backend abstraction for a single board.
+ * Bound to a specific board ID for load/save operations.
  * Uses BoardDefinition as the single format.
  */
 export interface IBoardBackend {
-  load(id: string): Promise<BoardDefinition>;
+  load(): Promise<BoardDefinition>;
   save(board: BoardDefinition): Promise<void>;
+}
+
+/**
+ * Board management API for lifecycle operations.
+ * Separate from core backend to keep concerns isolated.
+ */
+export interface IBoardManagement {
   create(board: BoardDefinition): Promise<string>;
   delete(id: string): Promise<void>;
   list(): Promise<BoardDefinition[]>;

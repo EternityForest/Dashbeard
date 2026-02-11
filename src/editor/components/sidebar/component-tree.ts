@@ -44,6 +44,10 @@ export class ComponentTree extends LitElement {
       this.updateComponents();
     });
 
+    if(this.editorState.board.get()) {
+      this.updateComponents();
+    }
+
     // Subscribe to component selection
     this.editorState.selectedComponentId.subscribe(
       (id) => {

@@ -3,7 +3,7 @@
  * Variable component - stores and outputs a value.
  */
 
-import { html, TemplateResult, css } from 'lit';
+import { html, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { DashboardComponent } from '../dashboard-component';
 import type { ComponentConfig } from '../../boards/board-types';
