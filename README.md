@@ -9,26 +9,11 @@ Data sources are just hidden components.  One abstraction for everything.
 
 ## Usage
 
-```html
-
-<body>
-  <div id="root">
-    <ds-dashboard-renderer id="dashboard"></ds-dashboard-renderer>
-  </div>
-</body>
-
-
-<script type="module">
-    
-    // Example board definition (can be loaded from JSON file or API)
-    const exampleBoard = ...;
-    // Load the board into the renderer
-    const dashboard = document.getElementById('dashboard');
-    dashboard.loadBoard(exampleBoard);
-    console.log(dashboard);
-</script>
-
 ```
+npm run dev
+```
+
+Go to http://localhost:3000/examples/editor-example.html
 
 ## Testing
 
