@@ -215,7 +215,7 @@ export class DashboardEditor extends LitElement {
             <div>
               ${dirty
                 ? html` <span class="status-dirty"> ● Unsaved changes </span> `
-                : html`<span>All saved</span>`}
+                : html`<spanved</span>`}
             </div>
           </div>
         </div>

@@ -128,12 +128,7 @@ export class EditorState {
     this.board.set(board);
     this.isDirty.set(false);
 
-    // Auto-select root component
-    if (board?.rootComponent) {
-      this.selectedComponentId.set(board.rootComponent.id);
-    } else {
-      this.selectedComponentId.set(null);
-    }
+    this.selectedComponentId.set(null);
   }
 
   /**

@@ -9,6 +9,48 @@ import type {
   IBoardBackend,
 } from '../editor/types';
 
+
+// Sample board for testing
+// Uses unified BoardDefinition format
+export const defaultBoard: BoardDefinition = {
+  id: 'test-board-1',
+  metadata: {
+    name: 'Example Dashboard',
+    version: '1.0.0',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  rootComponent: {
+    id: 'layout-1',
+    type: 'flex-layout',
+    config: {
+      direction: 'column',
+      gap: '1rem',
+    },
+    children: [
+      {
+        id: 'comp-1',
+        type: 'slider',
+        config: {
+          min: 0,
+          max: 100,
+          defaultValue: 50,
+          label: 'Value',
+        },
+      },
+      {
+        id: 'comp-2',
+        type: 'variable',
+        config: {
+          defaultValue: 'Hello World',
+          label: 'Output',
+        },
+      },
+    ],
+  },
+  bindings: [],
+};
+
 /**
  * In-memory storage backend.
  * Useful for development and testing.
@@ -21,7 +63,7 @@ export class MemoryBackend implements IBoardBackend {
   ): Promise<BoardDefinition> {
     const board = this.boards.get(id);
     if (!board) {
-      throw new Error(`Board not found: ${id}`);
+      return defaultBoard;
     }
     return JSON.parse(JSON.stringify(board));
   }

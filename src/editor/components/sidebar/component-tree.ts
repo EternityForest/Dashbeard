@@ -2,7 +2,7 @@
  * Component tree panel - hierarchical component display.
  */
 
-import { LitElement, html, css, TemplateResult } from 'lit';
+import { LitElement, html, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { EditorState } from '../../editor-state';
 import type { Component } from '../../types';
