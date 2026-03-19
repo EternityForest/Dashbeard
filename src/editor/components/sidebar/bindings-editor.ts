@@ -60,6 +60,20 @@ export class BindingsEditor extends LitElement {
     filters: [],
   };
 
+  /**
+   * Binding ID being edited (if any).
+   */
+  @property({ type: String })
+  editingBindingId: string | null = null;
+
+  /**
+   * Edit state for an existing binding.
+   */
+  @property({ type: Object })
+  editingBindingState: {
+    filters: Array<{ type: string; config: Record<string, unknown> }>;
+  } = { filters: [] };
+
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     return this; // Renders to the element's light DOM
   }
@@ -189,6 +203,104 @@ export class BindingsEditor extends LitElement {
    */
   private removeFilterFromStack(index: number): void {
     this.formState.filters.splice(index, 1);
+    this.requestUpdate();
+  }
+
+  /**
+   * Start editing a binding's filters.
+   */
+  private startEditingBinding(binding: BindingDefinition): void {
+    this.editingBindingId = binding.id;
+    this.editingBindingState.filters = binding.filters
+      ? JSON.parse(JSON.stringify(binding.filters))
+      : [];
+    this.requestUpdate();
+  }
+
+  /**
+   * Cancel editing a binding.
+   */
+  private cancelEditingBinding(): void {
+    this.editingBindingId = null;
+    this.editingBindingState.filters = [];
+    this.requestUpdate();
+  }
+
+  /**
+   * Save binding filter changes.
+   */
+  private async saveBindingFilters(binding: BindingDefinition): Promise<void> {
+    if (!this.editorState) return;
+
+    const board = this.editorState.board.get();
+    if (!board) return;
+
+    const bindingToUpdate = board.bindings.find((b) => b.id === binding.id);
+    if (!bindingToUpdate) return;
+
+    // Update filters in binding
+    if (this.editingBindingState.filters.length > 0) {
+      bindingToUpdate.filters = this.editingBindingState.filters;
+    } else {
+      delete bindingToUpdate.filters;
+    }
+
+    // Update board definition first
+    this.editorState.board.set(board);
+    this.editorState.markDirty();
+
+    // Reload the board in the runtime to properly update filter nodes
+    const runtime = this.getRuntime();
+    const renderer = this.editorState.editorComponent.renderer;
+    if (runtime && renderer) {
+      try {
+        // Unload the current board first to clear all nodes
+        await runtime.unloadBoard();
+        // Reload with updated binding filters
+        await runtime.loadBoard(board);
+        // Re-render the dashboard
+        await renderer.rerenderBoard();
+      } catch (err) {
+        alert(`Failed to update binding filters: ${err}`);
+        console.error(`Failed to update binding filters: ${err}`);
+        return;
+      }
+    }
+
+    this.editingBindingId = null;
+    this.editingBindingState.filters = [];
+    this.updateBindings();
+    this.requestUpdate();
+  }
+
+  /**
+   * Add filter to editing binding.
+   */
+  private addFilterToEditingBinding(filterType: string): void {
+    const manifest = filterRegistry.getManifest(filterType);
+    if (!manifest) return;
+
+    const defaultConfig: Record<string, unknown> = {};
+    for (const [key, prop] of Object.entries(
+      manifest.configSchema.properties || {}
+    )) {
+      if (typeof prop === 'object' && prop !== null && 'default' in prop) {
+        defaultConfig[key] = (prop as any).default;
+      }
+    }
+
+    this.editingBindingState.filters.push({
+      type: filterType,
+      config: defaultConfig,
+    });
+    this.requestUpdate();
+  }
+
+  /**
+   * Remove filter from editing binding by index.
+   */
+  private removeFilterFromEditingBinding(index: number): void {
+    this.editingBindingState.filters.splice(index, 1);
     this.requestUpdate();
   }
 
@@ -361,7 +473,7 @@ export class BindingsEditor extends LitElement {
         runtime.getGraph().deleteBinding(binding);
       } catch (err) {
         alert(`Failed to delete binding in runtime: ${err}`);
-        console.warn(`Failed to delete binding in runtime: ${err}`);
+        console.error(`Failed to delete binding in runtime: ${err}`);
       }
     }
 
@@ -468,6 +580,7 @@ export class BindingsEditor extends LitElement {
   private renderBinding(binding: BindingDefinition): TemplateResult {
     const [upstreamCompId, upstreamPort] = binding.fromPort.split('.');
     const [downstreamCompId, downstreamPort] = binding.toPort.split('.');
+    const isEditing = this.editingBindingId === binding.id;
 
     return html`
       <div class="binding-item">
@@ -482,13 +595,95 @@ export class BindingsEditor extends LitElement {
             <span class="port-name">.${downstreamPort}</span>
           </div>
         </div>
-        <button
-          class="delete-binding"
-          @click="${() => this.handleDeleteBinding(binding.id)}"
-          title="Delete binding"
+        <div style="display: flex; gap: 4px;">
+          <button
+            class="edit-binding"
+            @click="${() => this.startEditingBinding(binding)}"
+            title="Edit binding filters"
+            style="padding: 4px 8px; font-size: 11px; background: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; cursor: pointer; border-radius: 2px;"
+          >
+            ⚙
+          </button>
+          <button
+            class="delete-binding"
+            @click="${() => this.handleDeleteBinding(binding.id)}"
+            title="Delete binding"
+            style="padding: 4px 8px; font-size: 11px; background: #fee; border: 1px solid #fcc; color: #c33; cursor: pointer; border-radius: 2px;"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      ${isEditing ? this.renderBindingEditor(binding) : ''}
+    `;
+  }
+
+  /**
+   * Render the editor for a binding's filters.
+   */
+  private renderBindingEditor(binding: BindingDefinition): TemplateResult {
+    const availableFilters = this.getAvailableFilters();
+
+    return html`
+      <div style="margin-top: 8px; padding: 8px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 3px;">
+        <div style="font-size: 11px; font-weight: 600; margin-bottom: 8px;">Filters</div>
+
+        ${this.editingBindingState.filters.length > 0
+          ? html`
+              <div style="margin-bottom: 8px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 2px;">
+                ${this.editingBindingState.filters.map(
+                  (filter, index) => html`
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${index < this.editingBindingState.filters.length - 1 ? '6px' : '0'}; font-size: 11px;">
+                      <span style="font-weight: 500;">
+                        ${filterRegistry.getManifest(filter.type)?.displayName || filter.type}
+                      </span>
+                      <button
+                        type="button"
+                        style="padding: 1px 4px; font-size: 10px; background: #fee; border: 1px solid #fcc; color: #c33; cursor: pointer; border-radius: 2px;"
+                        @click="${() => this.removeFilterFromEditingBinding(index)}"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  `
+                )}
+              </div>
+            `
+          : html`<div style="font-size: 10px; color: #999; margin-bottom: 8px;">No filters applied</div>`}
+
+        <select
+          @change="${(e: Event) => {
+            const select = e.target as HTMLSelectElement;
+            if (select.value) {
+              this.addFilterToEditingBinding(select.value);
+              select.value = '';
+            }
+          }}"
+          style="width: 100%; padding: 4px 6px; font-size: 11px; border: 1px solid #ddd; border-radius: 2px; box-sizing: border-box; margin-bottom: 6px;"
         >
-          ✕
-        </button>
+          <option value="">Add filter...</option>
+          ${availableFilters.map(
+            (filter) => html`<option value="${filter.type}">${filter.displayName}</option>`
+          )}
+        </select>
+
+        <div style="display: flex; gap: 4px;">
+          <button
+            type="button"
+            @click="${() => this.saveBindingFilters(binding)}"
+            style="flex: 1; padding: 4px 6px; font-size: 11px; background: #c8e6c9; border: 1px solid #81c784; color: #2e7d32; cursor: pointer; border-radius: 2px; font-weight: 500;"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            @click="${() => this.cancelEditingBinding()}"
+            style="flex: 1; padding: 4px 6px; font-size: 11px; background: #f5f5f5; border: 1px solid #bdbdbd; color: #666; cursor: pointer; border-radius: 2px;"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     `;
   }

@@ -262,14 +262,17 @@ export class NodeGraph {
    * Calls onDestroy() on all nodes.
    */
   async destroy(): Promise<void> {
+
+    for (const loadedBinding of this.loadedBindings) {
+      loadedBinding[1].destroy();
+    }
+    
     for (const node of this.nodes.values()) {
       if (this.readyNodes.has(node.id)) {
         await node.onDestroy();
       }
     }
-    for (const loadedBinding of this.loadedBindings) {
-      loadedBinding[1].destroy();
-    }
+ 
     this.nodes.clear();
     this.readyNodes.clear();
     this.loadedBindings.clear();
