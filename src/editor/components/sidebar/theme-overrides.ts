@@ -102,22 +102,12 @@ export class ThemeOverrides extends LitElement {
     const themeOverrides = board.settings?.themeOverrides || {};
     const properties = THEME_VARIABLES_SCHEMA.properties || {};
 
-    // Group variables by category
-    const colorVars = Object.entries(properties).filter(([key]) =>
-      key.includes('color')
-    );
-    const spacingVars = Object.entries(properties).filter(([key]) =>
-      key.includes('spacing')
-    );
-    const radiusVars = Object.entries(properties).filter(([key]) =>
-      key.includes('radius')
-    );
-    const shadowVars = Object.entries(properties).filter(([key]) =>
-      key.includes('shadow')
-    );
-    const typographyVars = Object.entries(properties).filter(
-      ([key]) => key.includes('font-') || key.includes('font')
-    );
+    const propslist = Object.entries(properties).map(([name, schema]) => {
+      return {
+        name,
+        schema,
+      };
+    }).sort((a, b) => a.name.localeCompare(b.name));
 
     return html`
       <style>
@@ -181,81 +171,14 @@ export class ThemeOverrides extends LitElement {
         <div class="divider"></div>
 
         <div class="variables-container">
-          ${colorVars.length > 0
-            ? html`
-                <div class="variable-group">
-                  <div class="variable-group-title">Colors</div>
-                  ${colorVars.map(([name, schema]) =>
-                    schemaToFormField(
-                      name,
-                      themeOverrides[name],
-                      schema,
-                      (value) => this.setThemeVariable(name, String(value))
-                    )
-                  )}
-                </div>
-              `
-            : ''}
-          ${spacingVars.length > 0
-            ? html`
-                <div class="variable-group">
-                  <div class="variable-group-title">Spacing</div>
-                  ${spacingVars.map(([name, schema]) =>
-                    schemaToFormField(
-                      name,
-                      themeOverrides[name],
-                      schema,
-                      (value) => this.setThemeVariable(name, String(value))
-                    )
-                  )}
-                </div>
-              `
-            : ''}
-          ${radiusVars.length > 0
-            ? html`
-                <div class="variable-group">
-                  <div class="variable-group-title">Border Radius</div>
-                  ${radiusVars.map(([name, schema]) =>
-                    schemaToFormField(
-                      name,
-                      themeOverrides[name],
-                      schema,
-                      (value) => this.setThemeVariable(name, String(value))
-                    )
-                  )}
-                </div>
-              `
-            : ''}
-          ${shadowVars.length > 0
-            ? html`
-                <div class="variable-group">
-                  <div class="variable-group-title">Shadows</div>
-                  ${shadowVars.map(([name, schema]) =>
-                    schemaToFormField(
-                      name,
-                      themeOverrides[name],
-                      schema,
-                      (value) => this.setThemeVariable(name, String(value))
-                    )
-                  )}
-                </div>
-              `
-            : ''}
-          ${typographyVars.length > 0
-            ? html`
-                <div class="variable-group">
-                  <div class="variable-group-title">Typography</div>
-                  ${typographyVars.map(([name, schema]) =>
-                    schemaToFormField(
-                      name,
-                      themeOverrides[name],
-                      schema,
-                      (value) => this.setThemeVariable(name, String(value))
-                    )
-                  )}
-                </div>
-              `
-            : ''}
+          ${propslist.map(({name, schema}) =>
+            schemaToFormField(
+              name,
+              themeOverrides[name],
+              schema,
+              (value) => this.setThemeVariable(name, String(value))
+            )
+          )}
         </div>
       </div>
     `;

@@ -15,12 +15,19 @@ export const THEME_VARIABLES_SCHEMA: ConfigSchema = {
   description: 'CSS custom properties for theming',
   properties: {
     // Colors
-    '--fg-color': {
+    '--fg': {
       type: 'string',
       description: 'Primary brand color',
       default: '#0066cc',
       format: 'color',
-    }
+    },
+
+    '--control-fg': {
+      type: 'string',
+      description: 'Primary brand color',
+      default: '#0066cc',
+      format: 'color',
+    },
   },
 };
 

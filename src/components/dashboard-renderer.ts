@@ -133,7 +133,7 @@ export class DashboardRenderer extends LitElement {
       .map(([name, value]) => `${name}: ${value};`)
       .join('\n');
 
-    const cssText = `:host { ${declarations} }`;
+    const cssText = `:root { ${declarations} }`;
 
     // Update or create style element
     let styleElement = this.renderRoot?.querySelector(

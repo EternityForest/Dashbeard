@@ -210,5 +210,10 @@ export class EditorState {
 
     this.markDirty();
     this.board.set(board);
+
+    // Trigger theme update in renderer
+    if (this.editorComponent.renderer) {
+      void this.editorComponent.renderer.rerenderBoard();
+    }
   }
 }
