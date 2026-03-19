@@ -11,6 +11,7 @@ import './component-tree';
 import './property-inspector';
 import './bindings-editor';
 import './theme-settings';
+import './theme-overrides';
 
 /**
  * Editor sidebar container.
@@ -51,8 +52,12 @@ export class EditorSidebar extends LitElement {
         <details>
           <summary>Theme</summary>
           <div class="panel-content">
-            <ds-editor-theme-settings .editorState="${this.editorState}">
+          <div> 
+          <ds-editor-theme-settings .editorState="${this.editorState}">
             </ds-editor-theme-settings>
+            <ds-editor-theme-overrides .editorState="${this.editorState}">
+            </ds-editor-theme-overrides>
+            </div>
           </div>
         </details>
 

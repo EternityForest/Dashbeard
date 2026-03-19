@@ -98,6 +98,7 @@ export interface BoardDefinition {
   /** Optional board settings */
   settings?: {
     theme?: 'light' | 'dark';
+    themeOverrides?: Record<string, string>;
   };
 
   /** Path to CSS theme file (relative to board resources) */
@@ -178,6 +179,10 @@ export const BOARD_SCHEMA: Record<string, unknown> = {
         theme: {
           type: 'string',
           enum: ['light', 'dark'],
+        },
+        themeOverrides: {
+          type: 'object',
+          description: 'CSS variable overrides for theming',
         },
       },
     },

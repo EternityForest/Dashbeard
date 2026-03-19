@@ -80,18 +80,16 @@ ds-dashboard-editor{
 }
 
 ds-editor-sidebar {
-
       display: flex;
       flex-direction: column;
       width: 100%;
       height: 100%;
       background: var(--box-bg);
-      overflow: hidden;
+      overflow: auto;
 
 
     .sidebar-content {
       flex-direction: column;
-      overflow: auto;
     }
 
     details {
@@ -99,7 +97,6 @@ ds-editor-sidebar {
       flex-direction: column;
       flex: 1;
       border-bottom: 1px solid #ddd;
-      overflow: auto;
     }
 
     details:last-of-type {
@@ -142,7 +139,6 @@ ds-editor-sidebar {
 
     .panel-content {
       flex: 1;
-      overflow-y: auto;
     }
 
     details[open] > .panel-content {
@@ -231,7 +227,6 @@ ds-editor-property-inspector {
     
     .panel {
       border-top: 1px solid;
-      overflow-y: auto;
     }
 
     .panel-header {
@@ -300,7 +295,6 @@ ds-editor-bindings {
 
   .panel {
     border-top: 1px solid;
-    overflow-y: auto;
   }
 
   .panel-header {
@@ -314,7 +308,6 @@ ds-editor-bindings {
 
   .panel-content {
     padding: 8px;
-    overflow-y: auto;
   }
 
   .hint {

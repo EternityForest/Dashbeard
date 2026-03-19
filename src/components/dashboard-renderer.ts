@@ -50,6 +50,9 @@ export class DashboardRenderer extends LitElement {
     // Register all built-in component factories
     this.registerBuiltInComponents();
 
+    // Apply theme variable overrides
+    this.applyThemeVariables(boardDef);
+
     // Load the board
     await this.runtime.loadBoard(boardDef);
     this.isLoaded = true;
@@ -69,12 +72,11 @@ export class DashboardRenderer extends LitElement {
       ?.replaceChildren(this.runtime.rootComponent);
   }
 
-
   constructor() {
     super();
     this.cssTheme.subscribe((_cssTheme) => {
-      this.requestUpdate(); 
-    })
+      this.requestUpdate();
+    });
   }
 
   /**
@@ -93,6 +95,11 @@ export class DashboardRenderer extends LitElement {
       return;
     }
 
+    const boarddef = this.runtime.getBoard();
+    if (boarddef) {
+      this.applyThemeVariables(boarddef);
+    }
+
     // Detach from DOM (preserves component objects and state)
     container.replaceChildren();
 
@@ -107,6 +114,39 @@ export class DashboardRenderer extends LitElement {
     for (const [type, em] of Object.entries(BUILT_IN_COMPONENTS)) {
       this.runtime.registerComponentType(type, em);
     }
+  }
+
+  /**
+   * Apply CSS variable overrides from board settings.
+   * Creates or updates a style element with custom properties.
+   *
+   * @param boardDef Board definition containing theme overrides
+   */
+  private applyThemeVariables(boardDef: BoardDefinition): void {
+    const overrides = boardDef.settings?.themeOverrides;
+    if (!overrides || Object.keys(overrides).length === 0) {
+      return;
+    }
+
+    // Build CSS custom property declarations
+    const declarations = Object.entries(overrides)
+      .map(([name, value]) => `${name}: ${value};`)
+      .join('\n');
+
+    const cssText = `:host { ${declarations} }`;
+
+    // Update or create style element
+    let styleElement = this.renderRoot?.querySelector(
+      '#dashboard-theme-variables'
+    ) as HTMLStyleElement | null;
+
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = 'dashboard-theme-variables';
+      this.renderRoot?.insertBefore(styleElement, this.renderRoot.firstChild);
+    }
+
+    styleElement.textContent = cssText;
   }
 
   /**

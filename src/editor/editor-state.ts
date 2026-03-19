@@ -182,4 +182,33 @@ export class EditorState {
       this.board.set(board);
     }
   }
+
+  /**
+   * Set a CSS custom property override.
+   *
+   * @param variableName CSS variable name (e.g., '--primary-color')
+   * @param value CSS value
+   */
+  setThemeVariable(variableName: string, value: string): void {
+    const board = this.board.get();
+    if (!board) return;
+
+    if (!board.settings) {
+      board.settings = {};
+    }
+
+    if (!board.settings.themeOverrides) {
+      board.settings.themeOverrides = {};
+    }
+
+    if (value === '' || value === undefined) {
+      // Remove override if empty
+      delete board.settings.themeOverrides[variableName];
+    } else {
+      board.settings.themeOverrides[variableName] = value;
+    }
+
+    this.markDirty();
+    this.board.set(board);
+  }
 }
