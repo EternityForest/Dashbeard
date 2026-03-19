@@ -74,6 +74,12 @@ export class BindingsEditor extends LitElement {
     filters: Array<{ type: string; config: Record<string, unknown> }>;
   } = { filters: [] };
 
+  /**
+   * Index of filter being edited within the binding editor.
+   */
+  @property({ type: Number })
+  editingFilterIndex: number | null = null;
+
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     return this; // Renders to the element's light DOM
   }
@@ -302,6 +308,37 @@ export class BindingsEditor extends LitElement {
   private removeFilterFromEditingBinding(index: number): void {
     this.editingBindingState.filters.splice(index, 1);
     this.requestUpdate();
+  }
+
+  /**
+   * Start editing a filter's configuration.
+   */
+  private startEditingFilter(filterIndex: number): void {
+    this.editingFilterIndex = filterIndex;
+    this.requestUpdate();
+  }
+
+  /**
+   * Stop editing a filter's configuration.
+   */
+  private stopEditingFilter(): void {
+    this.editingFilterIndex = null;
+    this.requestUpdate();
+  }
+
+  /**
+   * Update a filter's config property.
+   */
+  private updateFilterConfig(
+    filterIndex: number,
+    propertyName: string,
+    value: unknown
+  ): void {
+    const filter = this.editingBindingState.filters[filterIndex];
+    if (filter) {
+      filter.config[propertyName] = value;
+      this.requestUpdate();
+    }
   }
 
   /**
@@ -634,17 +671,29 @@ export class BindingsEditor extends LitElement {
               <div style="margin-bottom: 8px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 2px;">
                 ${this.editingBindingState.filters.map(
                   (filter, index) => html`
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${index < this.editingBindingState.filters.length - 1 ? '6px' : '0'}; font-size: 11px;">
-                      <span style="font-weight: 500;">
-                        ${filterRegistry.getManifest(filter.type)?.displayName || filter.type}
-                      </span>
-                      <button
-                        type="button"
-                        style="padding: 1px 4px; font-size: 10px; background: #fee; border: 1px solid #fcc; color: #c33; cursor: pointer; border-radius: 2px;"
-                        @click="${() => this.removeFilterFromEditingBinding(index)}"
-                      >
-                        Remove
-                      </button>
+                    <div style="margin-bottom: ${index < this.editingBindingState.filters.length - 1 ? '8px' : '0'}; padding-bottom: 8px; border-bottom: ${index < this.editingBindingState.filters.length - 1 ? '1px solid #f0f0f0' : 'none'};">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-weight: 500; font-size: 11px;">
+                          ${filterRegistry.getManifest(filter.type)?.displayName || filter.type}
+                        </span>
+                        <div style="display: flex; gap: 2px;">
+                          <button
+                            type="button"
+                            style="padding: 1px 4px; font-size: 10px; background: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; cursor: pointer; border-radius: 2px;"
+                            @click="${() => this.startEditingFilter(index)}"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            style="padding: 1px 4px; font-size: 10px; background: #fee; border: 1px solid #fcc; color: #c33; cursor: pointer; border-radius: 2px;"
+                            @click="${() => this.removeFilterFromEditingBinding(index)}"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                      ${this.editingFilterIndex === index ? this.renderFilterConfigEditor(filter, index) : ''}
                     </div>
                   `
                 )}
@@ -684,6 +733,84 @@ export class BindingsEditor extends LitElement {
             Cancel
           </button>
         </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render the config editor for a filter.
+   */
+  private renderFilterConfigEditor(
+    filter: { type: string; config: Record<string, unknown> },
+    filterIndex: number
+  ): TemplateResult {
+    const manifest = filterRegistry.getManifest(filter.type);
+    if (!manifest || !manifest.configSchema.properties) {
+      return html`<div style="font-size: 10px; color: #999; margin-top: 4px;">No properties to configure</div>`;
+    }
+
+    const properties = manifest.configSchema.properties;
+
+    return html`
+      <div style="margin-top: 4px; padding: 6px; background: #f5f5f5; border-radius: 2px; border-left: 2px solid #90caf9;">
+        ${Object.entries(properties).map(([key, propSchema]) => {
+          const propValue = filter.config[key];
+          const prop = propSchema as any;
+
+          if (prop.type === 'string') {
+            return html`
+              <div style="margin-bottom: 4px;">
+                <label style="display: block; font-size: 9px; color: #666; margin-bottom: 2px; font-weight: 500;">
+                  ${prop.description || key}
+                </label>
+                <input
+                  type="text"
+                  style="width: 100%; padding: 2px 4px; font-size: 10px; border: 1px solid #bbb; border-radius: 2px; box-sizing: border-box;"
+                  .value="${String(propValue || '')}"
+                  @change="${(e: Event) =>
+                    this.updateFilterConfig(filterIndex, key, (e.target as HTMLInputElement).value)}"
+                />
+              </div>
+            `;
+          } else if (prop.type === 'number') {
+            return html`
+              <div style="margin-bottom: 4px;">
+                <label style="display: block; font-size: 9px; color: #666; margin-bottom: 2px; font-weight: 500;">
+                  ${prop.description || key}
+                </label>
+                <input
+                  type="number"
+                  style="width: 100%; padding: 2px 4px; font-size: 10px; border: 1px solid #bbb; border-radius: 2px; box-sizing: border-box;"
+                  .value="${String(propValue || 0)}"
+                  @change="${(e: Event) =>
+                    this.updateFilterConfig(filterIndex, key, Number((e.target as HTMLInputElement).value))}"
+                />
+              </div>
+            `;
+          } else if (prop.type === 'boolean') {
+            return html`
+              <label style="display: flex; align-items: center; font-size: 10px; color: #666; margin-bottom: 4px; cursor: pointer;">
+                <input
+                  type="checkbox"
+                  style="margin-right: 4px;"
+                  .checked="${Boolean(propValue)}"
+                  @change="${(e: Event) =>
+                    this.updateFilterConfig(filterIndex, key, (e.target as HTMLInputElement).checked)}"
+                />
+                <span>${prop.description || key}</span>
+              </label>
+            `;
+          }
+
+          return html``;
+        })}
+        <button
+          type="button"
+          style="width: 100%; padding: 2px 4px; font-size: 9px; background: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; cursor: pointer; border-radius: 2px; margin-top: 4px;"
+          @click="${() => this.stopEditingFilter()}"
+        >
+          Done
+        </button>
       </div>
     `;
   }
