@@ -2,8 +2,118 @@
  * Built-in filters for common data transformations.
  */
 
-import { FilterManifest } from '../filter';
-import type { FilterRegistry } from '../filter';
+import { FilterManifest, FilterImplementation } from '../filter';
+import { filterRegistry } from '../filter';
+
+/**
+ * Invert filter implementation: logical NOT
+ */
+class InvertImplementation extends FilterImplementation {
+  filterInput(inputValue: unknown): unknown {
+    const num = Number(inputValue) || 0;
+    return num === 0 ? 1 : 0;
+  }
+
+  filterOutput(outputValue: unknown): unknown {
+    const num = Number(outputValue) || 0;
+    return num === 0 ? 1 : 0;
+  }
+}
+
+/**
+ * Add filter implementation: adds config value to input
+ */
+class AddImplementation extends FilterImplementation {
+  filterInput(inputValue: unknown): unknown {
+    const num = Number(inputValue) || 0;
+    const value = Number(this.config.value) || 0;
+    return num + value;
+  }
+  filterOutput(outputValue: unknown): unknown {
+    const num = Number(outputValue) || 0;
+    const value = Number(this.config.value) || 0;
+    return num - value;
+  }
+}
+
+/**
+ * Multiply filter implementation: scales input by factor
+ */
+class MultiplyImplementation extends FilterImplementation {
+  filterInput(inputValue: unknown): unknown {
+    const num = Number(inputValue) || 0;
+    const factor = Number(this.config.factor) || 1;
+    return num * factor;
+  }
+  filterOutput(outputValue: unknown): unknown {
+    const num = Number(outputValue) || 0;
+    const factor = Number(this.config.factor) || 1;
+    return num / factor;
+  }
+}
+
+/**
+ * Clamp filter implementation: constrains value within bounds
+ */
+class ClampRangeImplementation extends FilterImplementation {
+  filterInput(inputValue: unknown): unknown {
+    const num = Number(inputValue) || 0;
+    const min = Number(this.config.min) ?? 0;
+    const max = Number(this.config.max) ?? 100;
+    return Math.max(min, Math.min(max, num));
+  }
+
+  filterOutput(outputValue: unknown): unknown {
+    return this.filterInput(outputValue);
+  }
+}
+
+/**
+ * Conditional filter implementation: passes data based on condition
+ */
+class IfImplementation extends FilterImplementation {
+  filterInput(inputValue: unknown): unknown {
+    const num = Number(inputValue) || 0;
+    const condition = String(this.config.condition) || 'nonzero';
+
+    switch (condition) {
+      case 'nonzero':
+        return num !== 0 ? inputValue : null;
+      case 'positive':
+        return num > 0 ? inputValue : null;
+      case 'negative':
+        return num < 0 ? inputValue : null;
+      default:
+        return inputValue;
+    }
+  }
+}
+
+/**
+ * Lowpass filter implementation: exponential moving average
+ */
+class LowpassImplementation extends FilterImplementation {
+  private lastValue: unknown = null;
+  private initialized = false;
+
+  filterInput(inputValue: unknown): unknown {
+    if (!this.initialized) {
+      this.lastValue = inputValue;
+      this.initialized = true;
+      return inputValue;
+    }
+
+    const alpha = Number(this.config.alpha) || 0.3;
+    const currentNum = Number(inputValue) || 0;
+    const lastNum = Number(this.lastValue) || 0;
+
+    this.lastValue = lastNum * (1 - alpha) + currentNum * alpha;
+    return this.lastValue;
+  }
+
+}
+
+
 /**
  * Invert filter: logical NOT (returns 1 if input is 0, else 0).
  */
@@ -18,6 +128,9 @@ export const invertFilter: FilterManifest = {
       input: { name: 'input', type: upstreamType },
       output: { name: 'output', type: 'number' },
     };
+  },
+  createImplementation(config: Record<string, unknown>) {
+    return new InvertImplementation(config);
   },
 };
 
@@ -53,6 +166,9 @@ export const addFilter: FilterManifest = {
       output: { name: 'output', type: upstreamType },
     };
   },
+  createImplementation(config: Record<string, unknown>) {
+    return new AddImplementation(config);
+  },
 };
 
 /**
@@ -87,6 +203,9 @@ export const multiplyFilter: FilterManifest = {
       output: { name: 'output', type: upstreamType },
     };
   },
+  createImplementation(config: Record<string, unknown>) {
+    return new MultiplyImplementation(config);
+  },
 };
 
 /**
@@ -117,6 +236,9 @@ export const clampRangeFilter: FilterManifest = {
       input: { name: 'input', type: upstreamType },
       output: { name: 'output', type: upstreamType },
     };
+  },
+  createImplementation(config: Record<string, unknown>) {
+    return new ClampRangeImplementation(config);
   },
 };
 
@@ -155,6 +277,9 @@ export const ifFilter: FilterManifest = {
       output: { name: 'output', type: upstreamType },
     };
   },
+  createImplementation(config: Record<string, unknown>) {
+    return new IfImplementation(config);
+  },
 };
 
 /**
@@ -182,59 +307,15 @@ export const lowpassFilter: FilterManifest = {
       output: { name: 'output', type: upstreamType },
     };
   },
-};
-
-/**
- * Offset filter: bidirectional offset/subtract.
- * Input → output: adds configured value
- * Output → input: subtracts configured value
- * Useful for coordinate systems, thresholds, etc.
- */
-export const offsetFilter: FilterManifest = {
-  type: 'offset',
-  displayName: 'Offset',
-  description: 'Bidirectional offset (add going forward, subtract going backward)',
-  configSchema: {
-    type: 'object',
-    properties: {
-      value: {
-        type: 'number',
-        default: 0,
-        description: 'Offset value to add/subtract',
-      },
-    },
-    required: ['value'],
-  },
-  staticPorts: {
-    inputs: [
-      {
-        name: 'offset',
-        type: 'number',
-        description: 'Dynamic offset value',
-      },
-    ],
-  },
-  createPorts(upstreamType: string) {
-    // Only works with numbers
-    if (upstreamType !== 'number' && upstreamType !== 'any') {
-      throw new Error(`Offset filter only works with number type, got: ${upstreamType}`);
-    }
-    return {
-      input: { name: 'input', type: 'number' },
-      output: { name: 'output', type: 'number' },
-    };
+  createImplementation(config: Record<string, unknown>) {
+    return new LowpassImplementation(config);
   },
 };
 
-/**
- * Register all built-in filters.
- */
-export function registerBuiltInFilters(filterRegistry: FilterRegistry): void {
-  filterRegistry.register(invertFilter);
-  filterRegistry.register(addFilter);
-  filterRegistry.register(multiplyFilter);
-  filterRegistry.register(clampRangeFilter);
-  filterRegistry.register(ifFilter);
-  filterRegistry.register(lowpassFilter);
-  filterRegistry.register(offsetFilter);
-}
+
+filterRegistry.register(invertFilter);
+filterRegistry.register(addFilter);
+filterRegistry.register(multiplyFilter);
+filterRegistry.register(clampRangeFilter);
+filterRegistry.register(ifFilter);
+filterRegistry.register(lowpassFilter);

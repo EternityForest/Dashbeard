@@ -3,6 +3,7 @@
  * Manages the actual data flow from upstream → filters → downstream.
  */
 
+import './filters';
 import { Filter, filterRegistry } from './filter';
 import { Node } from './node';
 import type { NodeGraph } from './node-graph';
@@ -148,13 +149,17 @@ export class LoadedBinding {
     );
 
     if (this.filters.length > 0) {
-      // Connect the first filter
+      // Connect source to first filter's input
       await this.filters[0].node.inputPort?.connectToOutput(port);
 
-      for (const filter of this.filters.slice(1)) {
-        await filter.node.inputPort?.connectToOutput(filter.node.outputPort!);
+      // Connect each filter to the next
+      for (let i = 0; i < this.filters.length - 1; i++) {
+        await this.filters[i + 1].node.inputPort?.connectToOutput(
+          this.filters[i].node.outputPort!
+        );
       }
 
+      // Connect last filter's output to destination
       await this.filters[
         this.filters.length - 1
       ].node.outputPort?.connectToInput(destinationPort);

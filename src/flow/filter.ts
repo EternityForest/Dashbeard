@@ -5,8 +5,40 @@
  */
 
 import { Node } from './node';
-import { Port } from './port';
-import  {registerBuiltInFilters} from './filters';
+import { Port, SourceType } from './port';
+
+/**
+ * Base class for filter implementations.
+ * Subclasses implement the actual transformation logic.
+ */
+export abstract class FilterImplementation {
+  /**
+   * Constructor receives the initial upstream value.
+   */
+  constructor(public config: Record<string, unknown>) {}
+
+  /**
+   * Transform data flowing forward (upstream → downstream).
+   * Called when data arrives at the filter's input port.
+   *
+   * @param inputValue The value from the upstream port
+   * @returns The transformed value to send to output port
+   */
+  abstract filterInput(inputValue: unknown): unknown;
+
+  /**
+   * Transform data flowing backward (downstream → upstream).
+   * Called when data comes back from the downstream port.
+   * Optional - only needed for bidirectional filters.
+   *
+   * @param outputValue The value from the downstream port
+   * @returns The transformed value to send back to input port
+   */
+  filterOutput(outputValue: unknown): unknown {
+    // Default: pass through unchanged
+    return outputValue;
+  }
+}
 /**
  * Static port declaration for additional filter ports.
  * Beyond the main input/output, filters can have other ports.
@@ -49,6 +81,9 @@ export interface FilterManifest {
     input: { name: string; type: string };
     output: { name: string; type: string };
   };
+
+  // Factory function to create a filter implementation instance
+  createImplementation(config: Record<string, unknown>): FilterImplementation;
 }
 
 /**
@@ -86,13 +121,13 @@ export class Filter {
   manifest: FilterManifest;
   config: Record<string, unknown>;
   node: FilterNode;
-
-
+  implementation: FilterImplementation;
 
   constructor(manifest: FilterManifest, config: Record<string, unknown>, filterId: string) {
     this.manifest = manifest;
     this.config = config;
-    this.node = new FilterNode(filterId, manifest);
+    this.implementation = manifest.createImplementation(config);
+    this.node = new FilterNode(filterId, manifest, this.implementation);
   }
 
   /**
@@ -105,7 +140,7 @@ export class Filter {
 
   destroy(): void {
     this.node.destroy();
-  } 
+  }
 }
 
 /**
@@ -113,11 +148,14 @@ export class Filter {
  */
 export class FilterNode extends Node {
   manifest: FilterManifest;
+  implementation: FilterImplementation;
   inputPort: Port | undefined;
   outputPort: Port | undefined;
-  constructor(id: string, manifest: FilterManifest) {
+
+  constructor(id: string, manifest: FilterManifest, implementation: FilterImplementation) {
     super(id);
     this.manifest = manifest;
+    this.implementation = implementation;
   }
 
   /**
@@ -137,6 +175,35 @@ export class FilterNode extends Node {
     this.inputPort = inputPort;
     this.outputPort = outputPort;
 
+    // Wire up data handlers for forward data flow
+    // When data arrives at input, transform it and send to output
+    inputPort.addDataHandler(async (data, source) => {
+      if(source != SourceType.Upstream) return;
+      const transformedValue = await this.onData(data.value);
+      if (transformedValue !== null && transformedValue !== undefined) {
+        await outputPort.onNewData(
+          { value: transformedValue, timestamp: Date.now() },
+          SourceType.PortOwner
+        );
+      }
+    });
+
+    // Wire up reverse data flow for bidirectional filters
+    // When data arrives at output from downstream, transform backward and send to input
+    outputPort.addDataHandler(async (data, source) => {
+      if(source != SourceType.Downstream) return;
+
+      const transformedValue = this.implementation.filterOutput(data.value);
+      if (transformedValue !== null && transformedValue !== undefined) {
+        // Propagate transformed data back upstream through the input port
+        // This enables bidirectional filters to work properly
+        await inputPort.onNewData(
+          { value: transformedValue, timestamp: Date.now() },
+          SourceType.PortOwner
+        );
+      }
+    });
+
     // Add static additional ports
     if (this.manifest.staticPorts?.inputs) {
       for (const portDecl of this.manifest.staticPorts.inputs) {
@@ -152,12 +219,11 @@ export class FilterNode extends Node {
   }
 
   /**
-   * Get the data flowing through main output port.
-   * Subclasses override to implement transformation logic.
+   * Transform data flowing through the filter.
+   * Uses the filter implementation's filterInput method.
    */
   async onData(inputData: unknown): Promise<unknown> {
-    // Default: pass through unchanged
-    return inputData;
+    return this.implementation.filterInput(inputData);
   }
 }
 
@@ -166,4 +232,3 @@ export class FilterNode extends Node {
  */
 export const filterRegistry = new FilterRegistry();
 
-registerBuiltInFilters(filterRegistry);
