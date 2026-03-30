@@ -3,7 +3,7 @@ ds-dashboard-renderer{
       height: 100%;
       width: 100%;
       overflow: auto;
-      --component-grid-height: 4rem;
+      --component-grid-height: 6rem;
     
 
     .dashboard {
@@ -35,8 +35,8 @@ ds-dashboard-renderer{
     }
 }
 
-ds-flex-layout{
-    .flex-layout {
+ds-stack-layout{
+    .stack-layout {
       display: flex;
       height: 100%;
       width: 100%;

@@ -170,6 +170,11 @@ export class PropertyInspector extends LitElement {
       return;
     }
 
+    if (this.selectedComponent.id =="root"){
+      throw new Error(
+        "Cannot change type of root"
+      )
+    }
     try {
       const newComponent = await runtime.swapComponentType(
         this.selectedComponent.id,

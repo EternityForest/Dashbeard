@@ -87,7 +87,7 @@ export class ComponentTree extends LitElement {
    * Get icon category for component type.
    */
   private getIconCategory(type: string): string {
-    if (type === 'flex-layout') return 'layout';
+    if (type === 'stack-layout') return 'layout';
     if (type === 'slider') return 'input';
     if (type === 'variable') return 'data';
     return 'display';
@@ -125,7 +125,7 @@ export class ComponentTree extends LitElement {
         <div class="tree-name">
           ${component.id}
         </div>
-        <div class="tree-type">
+        <div class="tree-type margin subtle">
           ${component.type}
         </div>
       </div>
@@ -149,7 +149,7 @@ export class ComponentTree extends LitElement {
     }
 
     return html`
-      <div class="tree">
+      <div class="tree" style="text-wrap:nowrap">
         ${this.components.map(
           (comp) => this.renderComponent(comp, 0)
         )}

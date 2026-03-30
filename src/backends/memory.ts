@@ -15,11 +15,9 @@ export const defaultBoard: BoardDefinition = {
     modified: new Date().toISOString(),
   },
   rootComponent: {
-    id: 'layout-1',
-    type: 'flex-layout',
+    id: 'root',
+    type: 'plain-layout',
     config: {
-      direction: 'column',
-      gap: '1rem',
     },
     children: [
       {

@@ -18,7 +18,7 @@ const validBoard: BoardDefinition = {
   },
   rootComponent: {
     id: 'main-layout',
-    type: 'flex-layout',
+    type: 'stack-layout',
     config: {
       direction: 'column',
       gap: 12,
@@ -128,7 +128,7 @@ describe('Board Validation', () => {
       metadata: { version: '1.0', name: 'Test' },
       rootComponent: {
         id: 'main-layout',
-        type: 'flex-layout',
+        type: 'stack-layout',
         config: {},
         children: [
           { id: 'comp1', type: 'variable', config: {} },
@@ -155,7 +155,7 @@ describe('Board Validation', () => {
       metadata: { version: '1.0', name: 'Test' },
       rootComponent: {
         id: 'main-layout',
-        type: 'flex-layout',
+        type: 'stack-layout',
         config: {},
         children: [
           { id: 'comp1', type: 'variable', config: {} },
@@ -182,7 +182,7 @@ describe('Board Validation', () => {
       metadata: { version: '1.0', name: 'Test' },
       rootComponent: {
         id: 'main-layout',
-        type: 'flex-layout',
+        type: 'stack-layout',
         config: {},
         children: [
           { id: 'comp1', type: 'variable', config: {} },
@@ -231,7 +231,7 @@ describe('Board Validation', () => {
         rootComponent: 
           {
             id: 'main-layout',
-            type: 'flex-layout',
+            type: 'stack-layout',
             config: {
               direction: 'column',
               gap: 12,

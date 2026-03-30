@@ -10,11 +10,11 @@ import { DashboardComponent } from '../dashboard-component';
 /**
  * FlexLayout component - container for arranging children with flexbox.
  */
-@customElement('ds-flex-layout')
-export class FlexLayoutComponent extends DashboardComponent {
+@customElement('ds-stack-layout')
+export class StackLayoutComponent extends DashboardComponent {
   static readonly typeSchema: ComponentTypeSchema = {
-    name: 'flex-layout',
-    displayName: 'Flex Layout',
+    name: 'stack-layout',
+    displayName: 'Stack Layout',
     category: 'layout',
     description: 'Container for arranging children with flexbox',
     configSchema: {
@@ -26,6 +26,7 @@ export class FlexLayoutComponent extends DashboardComponent {
           description: 'Flex direction: row or column',
           default: 'row',
         },
+
         gap: {
           type: 'string',
           description: 'Gap between components',
@@ -68,21 +69,21 @@ export class FlexLayoutComponent extends DashboardComponent {
 
   override updated(_changedProperties: Map<string, unknown>) {
         this.renderRoot
-      ?.querySelector(`#flex-layout-${this.id}`)
+      ?.querySelector(`#stack-layout-${this.id}`)
       ?.replaceChildren();
 
     (this.componentConfig?.children || []).forEach((cnf) => {
       const child = this.allComponents.get(cnf.id);
       if (child) {
         const existing = this.renderRoot
-          ?.querySelector(`#flex-layout-${this.id}`)
+          ?.querySelector(`#stack-layout-${this.id}`)
           ?.querySelector(`#${cnf.id}`);
         if (existing) {
           existing.remove();
         }
 
         this.renderRoot
-          ?.querySelector(`#flex-layout-${this.id}`)
+          ?.querySelector(`#stack-layout-${this.id}`)
           ?.appendChild(child);
       }
     });
@@ -93,8 +94,8 @@ export class FlexLayoutComponent extends DashboardComponent {
   override render(): TemplateResult {
     return html`
       <div
-        id="flex-layout-${this.id}"
-        class="flex-layout"
+        id="stack-layout-${this.id}"
+        class="stack-layout"
         style="flex-direction: ${this.direction}; 
       gap: ${this.gap};
       --component-grid-height: ${this.componentGridHeight};
