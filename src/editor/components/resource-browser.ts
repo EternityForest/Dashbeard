@@ -301,6 +301,9 @@ export class ResourceBrowser extends LitElement {
           </div>
 
           <div class="dialog-footer">
+            <button class="btn-secondary" @click="${() => this.clearSelection()}">
+              Clear
+            </button>
             <button class="btn-secondary" @click="${() => this.closeDialog()}">
               Cancel
             </button>
@@ -418,6 +421,14 @@ export class ResourceBrowser extends LitElement {
       }
       this.closeDialog();
     }
+  }
+
+  private clearSelection(): void {
+    this.value = '';
+    if (this.onChange) {
+      this.onChange('');
+    }
+    this.closeDialog();
   }
 
   private onInputChange(e: Event): void {

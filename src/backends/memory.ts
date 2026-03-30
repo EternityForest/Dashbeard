@@ -64,10 +64,15 @@ export class MemoryBackend implements IBoardBackend {
           size: 85,
           type: 'file',
         },
+        {
+          name: 'red.css',
+          url: 'data:text/css;charset=utf-8;base64,OnJvb3Qgew0KICAtLWJnOiByZWQ7DQogIC0tYm94LWJnOiByZWQ7DQp9',
+          size: 1000,
+          type: 'file',
+        },
       ];
-    }
-    else{
-        throw new Error("No such folder "+folder);
+    } else {
+      throw new Error('No such folder ' + folder);
     }
   }
 
