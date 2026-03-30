@@ -9,13 +9,23 @@ import { SliderComponent } from './slider';
 import { StackLayoutComponent } from './stack-layout';
 import { PanelLayoutComponent } from './panel-layout';
 import { PlainLayoutComponent } from './plain-layout';
+import { PanelBodyComponent } from './panel-body';
+import { PanelHeaderComponent } from './panel-header';
+import { HeadingComponent } from './section-heading';
 /**
  * Registry mapping component type names to their constructors.
  */
-export const BUILT_IN_COMPONENTS: Record<string, DashboardComponentConstructor> = {
-  variable: VariableComponent
-  , slider: SliderComponent
-  , 'stack-layout': StackLayoutComponent,
+export const BUILT_IN_COMPONENTS: Record<
+  string,
+  DashboardComponentConstructor
+> = {
+  variable: VariableComponent,
+  slider: SliderComponent,
+  'stack-layout': StackLayoutComponent,
   'panel-layout': PanelLayoutComponent,
-  'plain-layout': PlainLayoutComponent
-}
+  'panel-header': PanelHeaderComponent,
+  'panel-body': PanelBodyComponent,
+  'plain-layout': PlainLayoutComponent,
+
+  'heading':HeadingComponent
+};

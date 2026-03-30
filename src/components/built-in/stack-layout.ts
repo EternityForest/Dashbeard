@@ -76,6 +76,7 @@ export class StackLayoutComponent extends PlainLayoutComponent {
         class="stack-layout"
         style="flex-direction: ${this.direction}; 
       gap: ${this.gap};
+      flex-wrap:wrap;
       --component-grid-height: ${this.componentGridHeight};
       "
       ></div>

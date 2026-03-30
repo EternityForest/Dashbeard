@@ -19,6 +19,9 @@ import { createPortData } from '../flow/data-types';
  * - Manages reactive UI and data flow
  */
 export class DashboardComponent extends LitElement {
+
+  public static readonly defaultChildren: ComponentConfig[] = [];
+
   static readonly typeSchema: ComponentTypeSchema = {
     name: '',
     displayName: 'Base Component',
@@ -28,6 +31,7 @@ export class DashboardComponent extends LitElement {
       properties: {},
     }
   }
+
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     return this; // Renders to the element's light DOM

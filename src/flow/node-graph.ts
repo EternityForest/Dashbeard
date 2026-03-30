@@ -90,13 +90,14 @@ export class NodeGraph {
     // Update the node's ID
     const node = this.nodes.get(from);
     const newSlot = this.nodes.get(to);
-    if(newSlot){
-      throw new Error(to +" exists in node graph")
+    if (newSlot) {
+      throw new Error(to + ' exists in node graph');
     }
     if (node) {
       node.setId(to);
       this.nodes.delete(from);
       this.nodes.set(to, node);
+      node.setId(to);
     }
   }
 

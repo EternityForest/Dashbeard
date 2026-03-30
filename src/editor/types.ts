@@ -15,19 +15,13 @@ export type {
   ComponentConfig as Component,
   BindingDefinition,
   BoardDefinition,
-}
+};
 /**
  * JSON Schema subset for component configuration.
  * Supports types, enums, defaults, numeric constraints, and descriptions.
  */
 export interface ConfigSchema {
-  type?:
-    | 'object'
-    | 'string'
-    | 'number'
-    | 'boolean'
-    | 'array'
-    | string[];
+  type?: 'object' | 'string' | 'number' | 'boolean' | 'array' | string[];
   properties?: Record<string, ConfigSchema>;
   required?: string[];
   default?: unknown;
@@ -60,23 +54,18 @@ export interface PortSchema {
 export interface ComponentTypeSchema {
   name: string;
   displayName: string;
-  category:
-    | 'layout'
-    | 'input'
-    | 'display'
-    | 'logic'
-    | 'data';
+  category: 'layout' | 'text' | 'input' | 'display' | 'logic' | 'data';
   description?: string;
   icon?: string;
   configSchema: ConfigSchema;
 }
 
 /** File must be accessible via some sort of URL */
-export interface FileMetadata{
-  name: string,
-  size: number,
-  url?: string,
-  type: 'file'|'folder';
+export interface FileMetadata {
+  name: string;
+  size: number;
+  url?: string;
+  type: 'file' | 'folder';
 }
 
 /**
@@ -97,10 +86,7 @@ export interface IBoardBackend {
  */
 export interface ComponentRegistryEntry {
   schema: ComponentTypeSchema;
-  factory: (
-    id: string,
-    config: Record<string, unknown>
-  ) => Node;
+  factory: (id: string, config: Record<string, unknown>) => Node;
 }
 
 /**

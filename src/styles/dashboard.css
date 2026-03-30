@@ -105,3 +105,15 @@ ds-slider{
       opacity: 0.7;
     }
 }
+
+
+.panel-layout{
+  margin: 0px;
+  padding: 0px;
+  flex-wrap: wrap;
+}
+
+.panel-header{
+  margin: 0px;
+  padding: 0px;
+}

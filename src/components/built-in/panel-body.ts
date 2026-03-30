@@ -3,22 +3,14 @@ import { html, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { PlainLayoutComponent } from './plain-layout';
 
-@customElement('ds-panel-layout')
-export class PanelLayoutComponent extends PlainLayoutComponent {
+@customElement('ds-panel-body')
+export class PanelBodyComponent extends PlainLayoutComponent {
   static readonly defaultChildren = [
-    { type: 'panel-header', id: 'header', config: {},
-  },
-    {
-      type: 'panel-body',
-      id: 'body',
-
-      config: {},
-    },
   ];
 
   static readonly typeSchema: ComponentTypeSchema = {
-    name: 'panel-layout',
-    displayName: 'Panel Layout',
+    name: 'panel-body',
+    displayName: 'Panel Body',
     category: 'layout',
     description: 'Container for arranging children with flexbox',
     configSchema: {
@@ -43,7 +35,7 @@ export class PanelLayoutComponent extends PlainLayoutComponent {
     return html`
       <div
         id="component-${this.id}"
-        class="panel-layout card border flex-col margin"
+        class="panel-body flex-col margin padding"
       ></div>
     `;
   }

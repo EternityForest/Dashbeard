@@ -10,6 +10,8 @@ import { getComponentRegistry } from '../../component-registry';
 import { schemaToFormFields } from '../../utils/schema-to-form';
 import type { Component, ComponentTypeSchema } from '../../types';
 import type { ComponentConfig } from '@/boards/board-types';
+import { run } from 'node:test';
+import { DashboardComponent } from '@/components/dashboard-component';
 
 /**
  * Property inspector for editing selected component.
@@ -299,6 +301,10 @@ export class PropertyInspector extends LitElement {
     }
   }
 
+  private classForComponentType(type: string): typeof DashboardComponent{
+      return this.editorState?.editorComponent.renderer.runtime.componentClasses.get(type)
+  }
+
   /**
    * Add a child component.
    */
@@ -329,6 +335,7 @@ export class PropertyInspector extends LitElement {
       }
 
       // Add to runtime
+
       await runtime.addComponent(childDef, this.selectedComponent.id);
       await this.editorState.editorComponent.renderer?.rerenderBoard();
 
@@ -428,7 +435,7 @@ export class PropertyInspector extends LitElement {
             </div>
 
             <!-- Add Child (if component supports children) -->
-            ${this.selectedComponent.children !== undefined
+            ${this.classForComponentType(this.selectedComponent.type).typeSchema.category == "layout"
               ? html`
                   <div>
                     <div

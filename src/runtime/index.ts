@@ -34,15 +34,12 @@ export class BoardRuntime {
 
   public rootComponent?: DashboardComponent;
 
-
-
   /**
    * Map of component types to their factory functions.
    */
-  private classes = new Map<string, typeof DashboardComponent>();
+  public componentClasses = new Map<string, typeof DashboardComponent>();
 
-
-  public nodeGraphRefreshed: Observable<null> = this.graph.nodeGraphRefreshed;  
+  public nodeGraphRefreshed: Observable<null> = this.graph.nodeGraphRefreshed;
 
   public lastClickedComponent: Observable<string | null> = new Observable<
     string | null
@@ -54,11 +51,11 @@ export class BoardRuntime {
    * @param cls Class to create Node instances
    */
   registerComponentType(type: string, cls: typeof DashboardComponent): void {
-    this.classes.set(type, cls);
+    this.componentClasses.set(type, cls);
   }
 
   loadComponent(componentDef: ComponentConfig) {
-    const cls = this.classes.get(componentDef.type);
+    const cls = this.componentClasses.get(componentDef.type);
     if (!cls) {
       throw new Error(`Component type not registered: "${componentDef.type}"`);
     }
@@ -80,7 +77,6 @@ export class BoardRuntime {
     this.lastClickedComponent.set(componentId);
   }
 
-  
   /**
    * Load a board definition from JSON.
    * Validates structure, creates nodes, and establishes bindings.
@@ -123,7 +119,8 @@ export class BoardRuntime {
 
     const handler = (event: Event) => {
       const customEvent = event as CustomEvent;
-      const  componentId: string  = (customEvent.detail?.componentId || '') as string;
+      const componentId: string = (customEvent.detail?.componentId ||
+        '') as string;
 
       if (!componentId) {
         console.error('Received recreation request without componentId');
@@ -232,6 +229,11 @@ export class BoardRuntime {
     componentDef: ComponentConfig,
     parentId?: string
   ): Promise<DashboardComponent> {
+    const cls = this.componentClasses.get(componentDef.type);
+    if (!cls) {
+      throw new Error('No component ' + componentDef.type);
+    }
+
     const component = this.loadComponent(componentDef);
 
     // If adding to a parent, add to parent's children array
@@ -246,6 +248,13 @@ export class BoardRuntime {
       parent.componentConfig.children.push(componentDef);
       parent.onConfigUpdate();
     }
+
+    for (const cfg of cls.defaultChildren) {
+      const c = structuredClone(cfg);
+      cfg.id = component.id + '_' + c.id;
+      await this.addComponent(cfg, component.id);
+    }
+
     this.nodeGraphRefreshed.notifyObservers();
 
     return component;
@@ -302,8 +311,7 @@ export class BoardRuntime {
     if (node) {
       await this.graph.removeNode(componentId);
     }
-        this.nodeGraphRefreshed.notifyObservers();
-
+    this.nodeGraphRefreshed.notifyObservers();
   }
 
   /**
@@ -323,12 +331,12 @@ export class BoardRuntime {
       throw new Error(`Component not found: ${componentId}`);
     }
 
-    const cls = this.classes.get(newType);
+    const cls = this.componentClasses.get(newType);
     if (!cls) {
       throw new Error(`Component type not registered: "${newType}"`);
     }
 
-    const oldComponentClass = this.classes.get(
+    const oldComponentClass = this.componentClasses.get(
       oldComponent.componentConfig.type
     );
 
@@ -402,47 +410,40 @@ export class BoardRuntime {
     // Update the component's ID
     component.componentId = newId;
     component.componentConfig.id = newId;
-    
-    this.graph.renameNode(oldId,newId);
+
+    this.graph.renameNode(oldId, newId);
 
     // Update in the loaded components map
     this.loadedComponents.delete(oldId);
     this.loadedComponents.set(newId, component);
-
-    // Update any bindings that reference this component
-    const affectedBindings = this.graph
-      .getBindings()
-      .filter(
-        (b) =>
-          b.upstream.startsWith(oldId + '.') ||
-          b.downstream.startsWith(oldId + '.')
-      );
-
-    for (const binding of affectedBindings) {
-      this.graph.removeBindingConfig(binding.upstream, binding.downstream);
-    }
-
-    // Re-establish bindings with updated IDs
-    for (const binding of affectedBindings) {
-      const newUpstream = binding.upstream.startsWith(oldId + '.')
-        ? newId + binding.upstream.substring(oldId.length)
-        : binding.upstream;
-      const newDownstream = binding.downstream.startsWith(oldId + '.')
-        ? newId + binding.downstream.substring(oldId.length)
-        : binding.downstream;
-
-      try {
-        await this.graph.addBinding(newUpstream, newDownstream);
-      } catch (err) {
-        console.warn(`Failed to restore binding after rename: ${err}`);
-      }
-    }
 
     component.id = newId;
     // Re-render the component
     component.onConfigUpdate();
 
     this.nodeGraphRefreshed.notifyObservers();
+
+
+        for (const binding of this.board?.bindings || []) {
+      let update = false;
+
+      if (binding.toPort.startsWith(oldId + '.')) {
+        this.graph.deleteBinding(binding);
+        binding.toPort = newId + binding.toPort.substring(oldId.length);
+        update = true;
+      }
+
+      if (binding.fromPort.startsWith(oldId + '.')) {
+        this.graph.deleteBinding(binding);
+        binding.fromPort = newId + binding.fromPort.substring(oldId.length);
+        update = true;
+      }
+
+      if (update) {
+        await this.graph.loadBinding(binding);
+      }
+    }
+
   }
 
   /**
@@ -461,7 +462,7 @@ export class BoardRuntime {
     }
 
     const componentType = oldComponent.componentConfig.type;
-    const cls = this.classes.get(componentType);
+    const cls = this.componentClasses.get(componentType);
     if (!cls) {
       throw new Error(`Component type not registered: "${componentType}"`);
     }
@@ -473,12 +474,13 @@ export class BoardRuntime {
       .getBindings()
       .filter(
         (b) =>
-          b.upstream.split('.')[0] === componentId || b.downstream.split('.')[0] === componentId
+          b.upstream.split('.')[0] === componentId ||
+          b.downstream.split('.')[0] === componentId
       );
 
     affectedBindings.forEach((b) => {
       this.graph.removeBindingConfig(b.upstream, b.downstream);
-    })
+    });
     // Delete old component (preserve parent reference)
     await this.deleteComponent(componentId, true);
 
@@ -524,6 +526,4 @@ export class BoardRuntime {
     this.nodeGraphRefreshed.notifyObservers();
     return newComponent;
   }
-
-
 }
