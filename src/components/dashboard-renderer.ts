@@ -124,7 +124,7 @@ export class DashboardRenderer extends LitElement {
    */
   private applyThemeVariables(boardDef: BoardDefinition): void {
     const overrides = boardDef.settings?.themeOverrides;
-    if (!overrides || Object.keys(overrides).length === 0) {
+    if (!overrides) {
       return;
     }
 

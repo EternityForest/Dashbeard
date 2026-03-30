@@ -3,7 +3,7 @@
  */
 
 import type { ComponentTypeSchema } from '@/editor/types';
-import { html, TemplateResult, css } from 'lit';
+import { html, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { DashboardComponent } from '../dashboard-component';
 

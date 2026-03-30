@@ -144,6 +144,7 @@ export class ThemeSettings extends LitElement {
             .fileFilter="\\.css$"
             .onChange="${(path: string) => this.setTheme(path)}"
             .boardId="${this.editorState.board.get()?.id || ''}"
+            .backend="${this.editorState.backend}"
           ></ds-resource-browser>
         </div>
       </div>

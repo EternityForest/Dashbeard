@@ -1,27 +1,12 @@
 /**
  * Resource Browser Component
- * A component for browsing, uploading, and selecting file resources.
+ * A component for browsing and selecting file resources.
  * Used in the editor for selecting images, CSS files, and other assets.
  */
 
 import { LitElement, html, TemplateResult, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-
-interface ResourceItem {
-  path: string;
-  displayName: string;
-  type: string;
-  mimeType?: string;
-  size?: number;
-  modified?: number;
-}
-
-interface BuiltinResource {
-  url: string;
-  displayName: string;
-  category: string;
-  type: string;
-}
+import type { FileMetadata, IBoardBackend } from '../types';
 
 /**
  * Resource browser for selecting and uploading dashboard assets.
@@ -35,9 +20,14 @@ export class ResourceBrowser extends LitElement {
   @property({ type: String }) value: string = '';
 
   /**
-   * Module and resource identifiers for backend API calls.
+   * Board ID for backend API calls.
    */
   @property({ type: String }) boardId: string = '';
+
+  /**
+   * Backend instance for API calls.
+   */
+  @property({ type: Object }) backend?: IBoardBackend;
 
   /**
    * File extension regex filter (e.g., '\.(css|scss)$')
@@ -52,28 +42,22 @@ export class ResourceBrowser extends LitElement {
   /**
    * Callback when resource is selected.
    */
-  @property({ type: Function }) onChange?: (path: string) => void;
+  @property({ type: Function }) onChange?: (url: string) => void;
 
   @state()
   private showDialog = false;
 
   @state()
-  private resources: ResourceItem[] = [];
+  private items: FileMetadata[] = [];
 
   @state()
-  private builtinResources: BuiltinResource[] = [];
-
-  @state()
-  private currentFolder = '';
+  private currentFolder = '/';
 
   @state()
   private loading = false;
 
   @state()
   private error = '';
-
-  @state()
-  private activeTab: 'browse' | 'builtin' = 'browse';
 
   static override styles = css`
     :host {
@@ -180,28 +164,6 @@ export class ResourceBrowser extends LitElement {
       color: #333;
     }
 
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid #eee;
-      background: #f9f9f9;
-    }
-
-    .tab {
-      flex: 1;
-      padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      background: transparent;
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .tab.active {
-      border-bottom-color: #0066cc;
-      color: #0066cc;
-    }
-
     .dialog-content {
       flex: 1;
       overflow-y: auto;
@@ -263,23 +225,6 @@ export class ResourceBrowser extends LitElement {
     .resource-size {
       color: #999;
       font-size: 11px;
-    }
-
-    .upload-section {
-      border-top: 1px solid #eee;
-      padding: 12px;
-      background: #f9f9f9;
-    }
-
-    .file-input-wrapper {
-      position: relative;
-      overflow: hidden;
-      display: inline-block;
-    }
-
-    .file-input-wrapper input[type='file'] {
-      position: absolute;
-      left: -9999px;
     }
 
     .error {
@@ -350,27 +295,9 @@ export class ResourceBrowser extends LitElement {
             </button>
           </div>
 
-          <div class="tabs">
-            <button
-              class="tab ${this.activeTab === 'browse' ? 'active' : ''}"
-              @click="${() => this.activeTab = 'browse'}"
-            >
-              Browse Files
-            </button>
-            <button
-              class="tab ${this.activeTab === 'builtin' ? 'active' : ''}"
-              @click="${() => this.activeTab = 'builtin'}"
-            >
-              Built-in Resources
-            </button>
-          </div>
-
           <div class="dialog-content">
             ${this.error ? html`<div class="error">${this.error}</div>` : ''}
-
-            ${this.activeTab === 'browse'
-              ? this.renderBrowseTab()
-              : this.renderBuiltinTab()}
+            ${this.renderBrowseTab()}
           </div>
 
           <div class="dialog-footer">
@@ -388,88 +315,46 @@ export class ResourceBrowser extends LitElement {
       return html`<div class="loading">Loading...</div>`;
     }
 
+    const pathParts = this.currentFolder === '/' ? [] : this.currentFolder.split('/').filter(p => p);
+
     return html`
       <div class="folder-path">
-        <button class="breadcrumb-btn" @click="${() => this.loadFolder('')}">
+        <button class="breadcrumb-btn" @click="${() => this.loadFolder('/')}">
           /
         </button>
-        ${this.currentFolder
-          ? html`
-              <span>/</span>
-              <span>${this.currentFolder}</span>
-            `
-          : ''}
+        ${pathParts.map((part, idx) => {
+          const path = '/' + pathParts.slice(0, idx + 1).join('/');
+          return html`
+            <span>/</span>
+            <button class="breadcrumb-btn" @click="${() => this.loadFolder(path)}">
+              ${part}
+            </button>
+          `;
+        })}
       </div>
 
       <div class="resource-list">
-        ${this.resources.length === 0
+        ${this.items.length === 0
           ? html`<div style="color: #999; text-align: center; padding: 20px;">
               No files found
             </div>`
-          : this.resources.map(
-              (resource) => html`
+          : this.items.map(
+              (item) => html`
                 <div
-                  class="resource-item ${resource.path === this.value ? 'selected' : ''}"
-                  @click="${() => this.selectResource(resource.path)}"
+                  class="resource-item ${item.url === this.value ? 'selected' : ''}"
+                  @click="${() => this.selectItem(item)}"
                 >
-                  <span class="resource-name">${resource.displayName}</span>
-                  ${resource.size
+                  <span class="resource-name">
+                    ${item.type === 'folder' ? '📁 ' : '📄 '}${item.name}
+                  </span>
+                  ${item.size && item.type === 'file'
                     ? html`<span class="resource-size">
-                        ${this.formatFileSize(resource.size)}
+                        ${this.formatFileSize(item.size)}
                       </span>`
                     : ''}
                 </div>
               `
             )}
-      </div>
-
-      <div class="upload-section">
-        <div style="margin-bottom: 8px; font-weight: 500;">Upload New File</div>
-        <div class="file-input-wrapper">
-          <input
-            type="file"
-            id="file-upload"
-            @change="${(e: Event) => this.handleFileUpload(e)}"
-          />
-          <button
-            style="margin: 0;"
-            @click="${() => (document.getElementById('file-upload') as HTMLInputElement)?.click()}"
-          >
-            Choose File
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderBuiltinTab(): TemplateResult {
-    if (this.loading) {
-      return html`<div class="loading">Loading...</div>`;
-    }
-
-    const grouped = this.groupByCategory(this.builtinResources);
-
-    return html`
-      <div class="resource-list">
-        ${Object.entries(grouped).map(
-          ([category, resources]) => html`
-            <div style="margin-bottom: 16px;">
-              <div style="font-weight: 500; color: #666; margin-bottom: 8px;">
-                ${this.formatCategory(category)}
-              </div>
-              ${resources.map(
-                (resource) => html`
-                  <div
-                    class="resource-item ${resource.url === this.value ? 'selected' : ''}"
-                    @click="${() => this.selectResource(resource.url)}"
-                  >
-                    <span class="resource-name">${resource.displayName}</span>
-                  </div>
-                `
-              )}
-            </div>
-          `
-        )}
       </div>
     `;
   }
@@ -480,10 +365,7 @@ export class ResourceBrowser extends LitElement {
     this.error = '';
 
     try {
-      await this.loadFolder('');
-      if (this.activeTab === 'browse') {
-        await this.loadBuiltinResources();
-      }
+      await this.loadFolder('/');
     } catch (e) {
       this.error = `Failed to load resources: ${e}`;
     }
@@ -494,113 +376,48 @@ export class ResourceBrowser extends LitElement {
   }
 
   private async loadFolder(folder: string): Promise<void> {
-    if (!this.boardId) {
-      this.error = 'No board selected';
+    if (!this.boardId || !this.backend) {
+      this.error = 'No board or backend configured';
       return;
     }
 
     try {
       this.loading = true;
-      const url = `/api/dashboards/${this.boardId}/files/list?subfolder=${encodeURIComponent(folder)}`;
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      const items = await this.backend.listResourceFolder(this.boardId, folder);
 
       // Filter by file extension if specified
-      let resources = data.resources || [];
+      let filtered = items;
       if (this.fileFilter) {
         const regex = new RegExp(this.fileFilter);
-        resources = resources.filter((r: ResourceItem) => regex.test(r.displayName));
+        filtered = items.filter(item => item.type === 'folder' || regex.test(item.name));
       }
 
-      this.resources = resources;
+      this.items = filtered;
       this.currentFolder = folder;
       this.error = '';
     } catch (e) {
       this.error = `Failed to load folder: ${e}`;
-      this.resources = [];
+      this.items = [];
     } finally {
       this.loading = false;
     }
   }
 
-  private async loadBuiltinResources(): Promise<void> {
-    try {
-      const response = await fetch('/api/dashboards/builtin');
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+  private selectItem(item: FileMetadata): void {
+    if (item.type === 'folder') {
+      // Navigate into folder
+      const newPath = this.currentFolder === '/'
+        ? '/' + item.name
+        : this.currentFolder + '/' + item.name;
+      this.loadFolder(newPath);
+    } else if (item.url) {
+      // Select file with URL
+      this.value = item.url;
+      if (this.onChange) {
+        this.onChange(item.url);
       }
-
-      const data = await response.json();
-      this.builtinResources = data.resources || [];
-    } catch (e) {
-      this.builtinResources = [];
+      this.closeDialog();
     }
-  }
-
-  private async handleFileUpload(e: Event): Promise<void> {
-    const input = e.target as HTMLInputElement;
-    const files = input.files;
-
-    if (!files || files.length === 0) return;
-
-    const file = files[0];
-    if (this.fileFilter) {
-      const regex = new RegExp(this.fileFilter);
-      if (!regex.test(file.name)) {
-        this.error = `File type not allowed. Must match pattern: ${this.fileFilter}`;
-        input.value = '';
-        return;
-      }
-    }
-
-    try {
-      this.loading = true;
-      const formData = new FormData();
-      formData.append('path', file.name);
-      formData.append('file', file);
-
-      const response = await fetch(
-        `/api/dashboards/${this.boardId}/files/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error || 'Upload failed');
-      }
-
-      // Reload folder and select the uploaded file
-      await this.loadFolder(this.currentFolder);
-      this.selectResource(data.path);
-      input.value = '';
-    } catch (e) {
-      this.error = `Upload failed: ${e}`;
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  private selectResource(path: string): void {
-    this.value = path;
-    if (this.onChange) {
-      this.onChange(path);
-    }
-    this.closeDialog();
   }
 
   private onInputChange(e: Event): void {
@@ -617,25 +434,6 @@ export class ResourceBrowser extends LitElement {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  }
-
-  private formatCategory(category: string): string {
-    return category.charAt(0).toUpperCase() + category.slice(1);
-  }
-
-  private groupByCategory(
-    resources: BuiltinResource[]
-  ): Record<string, BuiltinResource[]> {
-    return resources.reduce(
-      (acc, resource) => {
-        if (!acc[resource.category]) {
-          acc[resource.category] = [];
-        }
-        acc[resource.category].push(resource);
-        return acc;
-      },
-      {} as Record<string, BuiltinResource[]>
-    );
   }
 }
 

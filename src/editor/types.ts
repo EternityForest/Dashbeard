@@ -71,24 +71,24 @@ export interface ComponentTypeSchema {
   configSchema: ConfigSchema;
 }
 
+/** File must be accessible via some sort of URL */
+export interface FileMetadata{
+  name: string,
+  size: number,
+  url?: string,
+  type: 'file'|'folder';
+}
+
 /**
  * Storage backend abstraction for a single board.
  * Bound to a specific board ID for load/save operations.
  * Uses BoardDefinition as the single format.
  */
 export interface IBoardBackend {
-  load(): Promise<BoardDefinition>;
+  load(id: string): Promise<BoardDefinition>;
   save(board: BoardDefinition): Promise<void>;
-}
 
-/**
- * Board management API for lifecycle operations.
- * Separate from core backend to keep concerns isolated.
- */
-export interface IBoardManagement {
-  create(board: BoardDefinition): Promise<string>;
-  delete(id: string): Promise<void>;
-  list(): Promise<BoardDefinition[]>;
+  listResourceFolder(boardid: string, folder: string): Promise<FileMetadata[]>;
 }
 
 /**

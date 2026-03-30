@@ -28,6 +28,41 @@ export const THEME_VARIABLES_SCHEMA: ConfigSchema = {
       default: '#0066cc',
       format: 'color',
     },
+
+    '--bg': {
+      type: 'string',
+      description: 'Background color',
+      default: '#fff',
+      format: 'color',
+    },
+
+    '--box-bg': {
+      type: 'string',
+      description: 'Box background color',
+      default: '#fff',
+      format: 'color',
+    },
+
+    '--accent-color': {
+      type: 'string',
+      description: 'Accent color',
+      default: '#0066cc',
+      format: 'color',
+    },
+
+    '--border-width': {
+      type: 'string',
+      description: 'Border width',
+    },
+
+    '--border-color': {
+      type: 'string',
+      description: 'Border color',
+    },
+    '--border-radius': {
+      type: 'string',
+      description: 'Border radius',
+    },
   },
 };
 

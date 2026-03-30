@@ -166,6 +166,7 @@ export class ThemeOverrides extends LitElement {
 
         <div class="info">
           Override default CSS variables to customize the dashboard theme.
+          All sizes need a unit such as px, mm, or rem.
         </div>
 
         <div class="divider"></div>

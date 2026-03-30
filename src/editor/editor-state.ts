@@ -4,7 +4,7 @@
  */
 
 import { Observable } from '../core/observable';
-import type { BoardDefinition } from './types';
+import type { BoardDefinition, IBoardBackend} from './types';
 import type { DashboardEditor } from './components/dashboard-editor';
 import type { Component } from './types';
 /**
@@ -40,6 +40,8 @@ export class EditorState {
 
   readonly nodeGraphChanged : Observable<null>;
 
+
+  public backend: IBoardBackend|null = null;
 
   public readonly editorComponent: DashboardEditor;
 
