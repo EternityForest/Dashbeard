@@ -9,6 +9,7 @@ import { EditorState } from '../../editor-state';
 import { getComponentRegistry } from '../../component-registry';
 import { schemaToFormFields } from '../../utils/schema-to-form';
 import type { Component, ComponentTypeSchema } from '../../types';
+import type { ComponentConfig } from '@/boards/board-types';
 
 /**
  * Property inspector for editing selected component.
@@ -115,6 +116,105 @@ export class PropertyInspector extends LitElement {
     );
 
     this.requestUpdate();
+  }
+
+  /**
+   * Handle component rename.
+   */
+  private async handleRenameComponent(newId: string): Promise<void> {
+    if (!this.selectedComponent || !this.editorState) {
+      return;
+    }
+
+    const oldId = this.selectedComponent.id;
+    newId = newId.trim();
+
+    // Validation
+    if (!newId) {
+      alert('Component name cannot be empty');
+      return;
+    }
+
+    if (newId === 'root') {
+      alert('Cannot rename component to "root"');
+      return;
+    }
+
+    if (newId === oldId) {
+      return; // No change
+    }
+
+    // Check if name already exists
+    const board = this.editorState.board.get();
+    if (board?.rootComponent && this.componentNameExists(board.rootComponent, newId)) {
+      alert(`A component named "${newId}" already exists`);
+      return;
+    }
+
+    const runtime = this.editorState.editorComponent.renderer?.runtime;
+    if (!runtime) {
+      return;
+    }
+
+    try {
+      // Update in board state
+      this.selectedComponent.id = newId;
+      if (board?.rootComponent) {
+        this.updateComponentReferences(board.rootComponent, oldId, newId);
+      }
+      if (board?.bindings) {
+        board.bindings.forEach((binding) => {
+          if (binding.fromPort.startsWith(oldId + '.')) {
+            binding.fromPort = newId + binding.fromPort.substring(oldId.length);
+          }
+          if (binding.toPort.startsWith(oldId + '.')) {
+            binding.toPort = newId + binding.toPort.substring(oldId.length);
+          }
+        });
+      }
+
+      // Update in runtime
+      await runtime.renameComponent(oldId, newId);
+
+      this.editorState.markDirty();
+      this.editorState.selectComponent(newId);
+      this.requestUpdate();
+    } catch (err) {
+      console.error('Failed to rename component:', err);
+      alert('Failed to rename component');
+      this.requestUpdate();
+    }
+  }
+
+  /**
+   * Update component references throughout the board after rename.
+   */
+  private updateComponentReferences(
+    component: ComponentConfig,
+    oldId: string,
+    newId: string
+  ): void {
+    if (component.children) {
+      component.children.forEach((child) => {
+        if (child.id === oldId) {
+          child.id = newId;
+        }
+        this.updateComponentReferences(child, oldId, newId);
+      });
+    }
+  }
+
+  /**
+   * Check if a component name already exists in the board.
+   */
+  private componentNameExists(component: ComponentConfig, name: string): boolean {
+    if (component.id === name) return true;
+    if (component.children) {
+      for (const child of component.children) {
+        if (this.componentNameExists(child, name)) return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -271,7 +371,19 @@ export class PropertyInspector extends LitElement {
     return html`
       <div class="panel">
         <div class="panel-header">
-          <div class="component-name">${this.selectedComponent.id}</div>
+          <div>
+            <input
+              type="text"
+              class="component-name-input"
+              .value="${this.selectedComponent.id}"
+              @change="${(e: Event) => {
+                const input = e.target as HTMLInputElement;
+                this.handleRenameComponent(input.value);
+              }}"
+              ?readonly="${this.selectedComponent.id === 'root'}"
+              title="${this.selectedComponent.id === 'root' ? 'Cannot rename root component' : 'Click to rename'}"
+            />
+          </div>
           <div class="component-type subtle">${this.selectedComponent.type}</div>
         </div>
         <div class="panel-content">

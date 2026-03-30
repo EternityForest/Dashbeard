@@ -17,7 +17,11 @@ export class Node {
   /**
    * Unique identifier for this node instance.
    */
-  readonly id: string;
+  private _id: string;
+
+  get id(): string {
+    return this._id;
+  }
 
   /**
    * Map of downstream-facing ports (consumers).
@@ -38,10 +42,17 @@ export class Node {
    */
   private isReady = false;
 
-  private onReadyListeners: (() => void)[] = []; 
+  private onReadyListeners: (() => void)[] = [];
 
   constructor(id: string) {
-    this.id = id;
+    this._id = id;
+  }
+
+  /**
+   * Rename this node. Should only be called during component rename operations.
+   */
+  setId(newId: string): void {
+    this._id = newId;
   }
 
   destroy(): void {

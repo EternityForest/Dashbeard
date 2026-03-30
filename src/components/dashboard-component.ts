@@ -35,7 +35,7 @@ export class DashboardComponent extends LitElement {
   
   public static getDefaultConfig(): ComponentConfig {
     const c: ComponentConfig = { 
-      id: this.typeSchema.name+'-'+Date.now(),
+      id: 'comp-'+Date.now(),
       type: this.typeSchema.name,
       config: {},
       children: [],
@@ -88,7 +88,7 @@ export class DashboardComponent extends LitElement {
       throw new Error('componentId is required');
     }
     this.componentConfig = config;
-    this.id = config.id;
+    this.id = this.componentConfig.id;
     this.node = new Node(this.id);
   }
 
@@ -97,6 +97,7 @@ export class DashboardComponent extends LitElement {
    * Subclasses can override to respond to config updates.
    */
   public onConfigUpdate(): void {
+    this.id = this.componentConfig.id;
     // Default: request update to re-render
     this.requestUpdate();
   }

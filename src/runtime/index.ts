@@ -33,10 +33,8 @@ export class BoardRuntime {
   public loadedComponents: Map<string, DashboardComponent> = new Map();
 
   public rootComponent?: DashboardComponent;
-  /**
-   * Map of component IDs to their Node instances.
-   */
-  private nodes = new Map<string, Node>();
+
+
 
   /**
    * Map of component types to their factory functions.
@@ -66,7 +64,6 @@ export class BoardRuntime {
     }
 
     const component = new cls(componentDef);
-    this.nodes.set(componentDef.id, component.getNode());
     this.graph.addNode(component.getNode());
     this.loadedComponents.set(componentDef.id, component);
     component.allComponents = this.loadedComponents;
@@ -97,7 +94,6 @@ export class BoardRuntime {
     this.board = validated;
 
     await this.graph.clear();
-    this.nodes.clear();
     this.loadedComponents.clear();
 
     if (validated.rootComponent) {
@@ -149,7 +145,6 @@ export class BoardRuntime {
    */
   async unloadBoard(): Promise<void> {
     await this.graph.destroy();
-    this.nodes.clear();
     this.board = undefined;
     this.nodeGraphRefreshed.notifyObservers();
   }
@@ -158,14 +153,14 @@ export class BoardRuntime {
    * Get a node by component ID.
    */
   getNode(componentId: string): Node | undefined {
-    return this.nodes.get(componentId);
+    return this.graph.getNode(componentId);
   }
 
   /**
    * Get all nodes in the board.
    */
   getNodes(): Node[] {
-    return Array.from(this.nodes.values());
+    return Array.from(this.graph.getNodes());
   }
 
   /**
@@ -303,10 +298,9 @@ export class BoardRuntime {
 
     // Remove from loaded components and nodes
     this.loadedComponents.delete(componentId);
-    const node = this.nodes.get(componentId);
+    const node = this.graph.getNode(componentId);
     if (node) {
       await this.graph.removeNode(componentId);
-      this.nodes.delete(componentId);
     }
         this.nodeGraphRefreshed.notifyObservers();
 
@@ -353,7 +347,6 @@ export class BoardRuntime {
 
     // Create new component with same ID and children
     const newComponent = new cls(newConfig);
-    this.nodes.set(newConfig.id, newComponent.getNode());
     this.graph.addNode(newComponent.getNode());
     this.loadedComponents.set(newConfig.id, newComponent);
     newComponent.allComponents = this.loadedComponents;
@@ -390,6 +383,66 @@ export class BoardRuntime {
    */
   private isBindingCompatible(upstream: string, downstream: string): boolean {
     return this.graph.canBind(upstream, downstream);
+  }
+
+  /**
+   * Rename a component throughout the board.
+   * Updates the component ID, all references, and re-renders the component.
+   *
+   * @param oldId Old component ID
+   * @param newId New component ID
+   * @throws If component not found
+   */
+  async renameComponent(oldId: string, newId: string): Promise<void> {
+    const component = this.loadedComponents.get(oldId);
+    if (!component) {
+      throw new Error(`Component not found: ${oldId}`);
+    }
+
+    // Update the component's ID
+    component.componentId = newId;
+    component.componentConfig.id = newId;
+    
+    this.graph.renameNode(oldId,newId);
+
+    // Update in the loaded components map
+    this.loadedComponents.delete(oldId);
+    this.loadedComponents.set(newId, component);
+
+    // Update any bindings that reference this component
+    const affectedBindings = this.graph
+      .getBindings()
+      .filter(
+        (b) =>
+          b.upstream.startsWith(oldId + '.') ||
+          b.downstream.startsWith(oldId + '.')
+      );
+
+    for (const binding of affectedBindings) {
+      this.graph.removeBindingConfig(binding.upstream, binding.downstream);
+    }
+
+    // Re-establish bindings with updated IDs
+    for (const binding of affectedBindings) {
+      const newUpstream = binding.upstream.startsWith(oldId + '.')
+        ? newId + binding.upstream.substring(oldId.length)
+        : binding.upstream;
+      const newDownstream = binding.downstream.startsWith(oldId + '.')
+        ? newId + binding.downstream.substring(oldId.length)
+        : binding.downstream;
+
+      try {
+        await this.graph.addBinding(newUpstream, newDownstream);
+      } catch (err) {
+        console.warn(`Failed to restore binding after rename: ${err}`);
+      }
+    }
+
+    component.id = newId;
+    // Re-render the component
+    component.onConfigUpdate();
+
+    this.nodeGraphRefreshed.notifyObservers();
   }
 
   /**
@@ -431,7 +484,6 @@ export class BoardRuntime {
 
     // Create new component with same ID
     const newComponent = new cls(oldConfig);
-    this.nodes.set(oldConfig.id, newComponent.getNode());
     this.graph.addNode(newComponent.getNode());
     this.loadedComponents.set(oldConfig.id, newComponent);
     newComponent.allComponents = this.loadedComponents;

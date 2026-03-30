@@ -71,7 +71,7 @@ export class NodeGraph {
 
     const affectedBindings = Array.from(this.loadedBindings.values()).filter(
       (b) => b.sourceNode.id === nodeId || b.destinationNode.id === nodeId
-    )
+    );
 
     for (const binding of affectedBindings) {
       this.deleteBinding(binding.config);
@@ -84,6 +84,20 @@ export class NodeGraph {
     }
 
     this.nodes.delete(nodeId);
+  }
+
+  renameNode(from: string, to: string) {
+    // Update the node's ID
+    const node = this.nodes.get(from);
+    const newSlot = this.nodes.get(to);
+    if(newSlot){
+      throw new Error(to +" exists in node graph")
+    }
+    if (node) {
+      node.setId(to);
+      this.nodes.delete(from);
+      this.nodes.set(to, node);
+    }
   }
 
   canBind(upstreamPort: string, downstreamPort: string): boolean {
@@ -102,8 +116,7 @@ export class NodeGraph {
       return false;
     }
     const upstreamPortObj = upstreamNode.getInputPort(upstreamPortName);
-    const downstreamPortObj =
-      downstreamNode.getOutputPort(downstreamPortName);
+    const downstreamPortObj = downstreamNode.getOutputPort(downstreamPortName);
 
     if (!upstreamPortObj || !downstreamPortObj) {
       return false;
@@ -156,9 +169,7 @@ export class NodeGraph {
    * @param downstreamPort The downstream port reference (componentId.portName)
    * @throws If binding not found
    */
-  deleteBinding(
-    bindingConfig : BindingDefinition,
-  ) {
+  deleteBinding(bindingConfig: BindingDefinition) {
     // Find the LoadedBinding that matches these ports
     let bindingToDelete: LoadedBinding | undefined;
     for (const [, loadedBinding] of this.loadedBindings) {
@@ -262,17 +273,16 @@ export class NodeGraph {
    * Calls onDestroy() on all nodes.
    */
   async destroy(): Promise<void> {
-
     for (const loadedBinding of this.loadedBindings) {
       loadedBinding[1].destroy();
     }
-    
+
     for (const node of this.nodes.values()) {
       if (this.readyNodes.has(node.id)) {
         await node.onDestroy();
       }
     }
- 
+
     this.nodes.clear();
     this.readyNodes.clear();
     this.loadedBindings.clear();
@@ -296,5 +306,4 @@ export class NodeGraph {
   getNodes(): Node[] {
     return Array.from(this.nodes.values());
   }
-
 }

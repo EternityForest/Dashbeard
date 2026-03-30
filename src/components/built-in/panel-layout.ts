@@ -1,11 +1,11 @@
 import type { ComponentTypeSchema } from '@/editor/types';
 import { html, TemplateResult } from 'lit';
 import { customElement} from 'lit/decorators.js';
-import { DashboardComponent } from '../dashboard-component';
+import { PlainLayoutComponent } from './plain-layout';
 
 
 @customElement('ds-panel-layout')
-export class PanelLayoutComponent extends DashboardComponent {
+export class PanelLayoutComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'panel-layout',
     displayName: 'Panel Layout',
@@ -28,34 +28,13 @@ export class PanelLayoutComponent extends DashboardComponent {
     this.requestUpdate();
   }
 
-  override updated(_changedProperties: Map<string, unknown>) {
-        this.renderRoot
-      ?.querySelector(`#panel-layout-${this.id}`)
-      ?.replaceChildren();
-
-    (this.componentConfig?.children || []).forEach((cnf) => {
-      const child = this.allComponents.get(cnf.id);
-      if (child) {
-        const existing = this.renderRoot
-          ?.querySelector(`#panel-layout-${this.id}`)
-          ?.querySelector(`#${cnf.id}`);
-        if (existing) {
-          existing.remove();
-        }
-
-        this.renderRoot
-          ?.querySelector(`#panel-layout-${this.id}`)
-          ?.appendChild(child);
-      }
-    });
-  }
   /**
    * Render the flex layout container with child placeholders.
    */
   override render(): TemplateResult {
     return html`
       <div
-        id="panel-layout-${this.id}"
+        id="component-${this.id}"
         class="panel-layout card border flex-col gaps padding margin"
       ></div>
     `;

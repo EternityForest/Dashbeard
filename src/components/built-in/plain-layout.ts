@@ -30,21 +30,21 @@ export class PlainLayoutComponent extends DashboardComponent {
 
   override updated(_changedProperties: Map<string, unknown>) {
         this.renderRoot
-      ?.querySelector(`#plain-layout-${this.id}`)
+      ?.querySelector(`#component-${this.id}`)
       ?.replaceChildren();
 
     (this.componentConfig?.children || []).forEach((cnf) => {
       const child = this.allComponents.get(cnf.id);
       if (child) {
         const existing = this.renderRoot
-          ?.querySelector(`#plain-layout-${this.id}`)
-          ?.querySelector(`#${cnf.id}`);
+          ?.querySelector(`#component-${this.id}`)
+          ?.querySelector(`#component-${cnf.id}`);
         if (existing) {
           existing.remove();
         }
 
         this.renderRoot
-          ?.querySelector(`#plain-layout-${this.id}`)
+          ?.querySelector(`#component-${this.id}`)
           ?.appendChild(child);
       }
     });
@@ -55,7 +55,7 @@ export class PlainLayoutComponent extends DashboardComponent {
   override render(): TemplateResult {
     return html`
       <div
-        id="plain-layout-${this.id}"
+        id="component-${this.id}"
         class="plain-layout"
       ></div>
     `;

@@ -5,13 +5,12 @@
 import type { ComponentTypeSchema } from '@/editor/types';
 import { html, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { DashboardComponent } from '../dashboard-component';
-
+import { PlainLayoutComponent } from './plain-layout';
 /**
  * FlexLayout component - container for arranging children with flexbox.
  */
 @customElement('ds-stack-layout')
-export class StackLayoutComponent extends DashboardComponent {
+export class StackLayoutComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'stack-layout',
     displayName: 'Stack Layout',
@@ -67,34 +66,13 @@ export class StackLayoutComponent extends DashboardComponent {
     this.requestUpdate();
   }
 
-  override updated(_changedProperties: Map<string, unknown>) {
-        this.renderRoot
-      ?.querySelector(`#stack-layout-${this.id}`)
-      ?.replaceChildren();
-
-    (this.componentConfig?.children || []).forEach((cnf) => {
-      const child = this.allComponents.get(cnf.id);
-      if (child) {
-        const existing = this.renderRoot
-          ?.querySelector(`#stack-layout-${this.id}`)
-          ?.querySelector(`#${cnf.id}`);
-        if (existing) {
-          existing.remove();
-        }
-
-        this.renderRoot
-          ?.querySelector(`#stack-layout-${this.id}`)
-          ?.appendChild(child);
-      }
-    });
-  }
   /**
    * Render the flex layout container with child placeholders.
    */
   override render(): TemplateResult {
     return html`
       <div
-        id="stack-layout-${this.id}"
+        id="component-${this.id}"
         class="stack-layout"
         style="flex-direction: ${this.direction}; 
       gap: ${this.gap};
