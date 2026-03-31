@@ -423,8 +423,7 @@ export class BoardRuntime {
 
     this.nodeGraphRefreshed.notifyObservers();
 
-
-        for (const binding of this.board?.bindings || []) {
+    for (const binding of this.board?.bindings || []) {
       let update = false;
 
       if (binding.toPort.startsWith(oldId + '.')) {
@@ -441,6 +440,14 @@ export class BoardRuntime {
 
       if (update) {
         await this.graph.loadBinding(binding);
+      }
+    }
+
+    const prefix = oldId + "-";
+    for(const i of component.componentConfig?.children || []){
+      if(i.id.startsWith(prefix)){
+        const suffix = i.id.substring(prefix.length);
+        await this.renameComponent(i.id, component.componentConfig.id+"-"+suffix);
       }
     }
   }
