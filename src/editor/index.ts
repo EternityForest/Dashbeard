@@ -26,13 +26,6 @@ export type {
   ValidationResult,
 } from './types';
 
-// Component registry for schema-based editing
-export {
-  ComponentRegistry,
-  getComponentRegistry,
-  resetComponentRegistry,
-} from './component-registry';
-
 // Storage backends for persistence
 export {
   MemoryBackend,
@@ -46,6 +39,3 @@ export { EditorState } from './editor-state';
 
 // Main editor component
 export { DashboardEditor } from './components/dashboard-editor';
-
-// Built-in component registration
-export { registerBuiltInComponents } from './register-built-in-components';

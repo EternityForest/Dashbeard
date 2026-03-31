@@ -6,11 +6,9 @@
 import { LitElement, html, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { EditorState } from '../../editor-state';
-import { getComponentRegistry } from '../../component-registry';
 import { schemaToFormFields } from '../../utils/schema-to-form';
 import type { Component, ComponentTypeSchema } from '../../types';
 import type { ComponentConfig } from '@/boards/board-types';
-import { run } from 'node:test';
 import { DashboardComponent } from '@/components/dashboard-component';
 
 /**
@@ -65,8 +63,11 @@ export class PropertyInspector extends LitElement {
     });
 
     // Load available types
-    const registry = getComponentRegistry();
-    this.availableTypes = registry.getAllTypes();
+    const runtime = this.editorState.editorComponent.renderer.runtime;
+    this.availableTypes = [];
+    for (const i of runtime.componentClasses.keys()) {
+      this.availableTypes.push(i);
+    }
   }
 
   /**
@@ -96,8 +97,11 @@ export class PropertyInspector extends LitElement {
     this.selectedComponent = component;
 
     // Get schema from registry
-    const registry = getComponentRegistry();
-    const schema = registry.getSchema(component.type);
+    const schema =
+      this.editorState?.editorComponent.renderer.runtime.componentClasses.get(
+        component.type
+      )?.typeSchema;
+
     this.componentSchema = schema || null;
 
     this.requestUpdate();
@@ -148,7 +152,10 @@ export class PropertyInspector extends LitElement {
 
     // Check if name already exists
     const board = this.editorState.board.get();
-    if (board?.rootComponent && this.componentNameExists(board.rootComponent, newId)) {
+    if (
+      board?.rootComponent &&
+      this.componentNameExists(board.rootComponent, newId)
+    ) {
       alert(`A component named "${newId}" already exists`);
       return;
     }
@@ -209,7 +216,10 @@ export class PropertyInspector extends LitElement {
   /**
    * Check if a component name already exists in the board.
    */
-  private componentNameExists(component: ComponentConfig, name: string): boolean {
+  private componentNameExists(
+    component: ComponentConfig,
+    name: string
+  ): boolean {
     if (component.id === name) return true;
     if (component.children) {
       for (const child of component.children) {
@@ -272,10 +282,8 @@ export class PropertyInspector extends LitElement {
       return;
     }
 
-    if (this.selectedComponent.id =="root"){
-      throw new Error(
-        "Cannot change type of root"
-      )
+    if (this.selectedComponent.id == 'root') {
+      throw new Error('Cannot change type of root');
     }
     try {
       const newComponent = await runtime.swapComponentType(
@@ -301,8 +309,12 @@ export class PropertyInspector extends LitElement {
     }
   }
 
-  private classForComponentType(type: string): typeof DashboardComponent{
-      return this.editorState?.editorComponent.renderer.runtime.componentClasses.get(type)
+  private classForComponentType(
+    type: string
+  ): undefined | typeof DashboardComponent {
+    return this.editorState?.editorComponent.renderer.runtime.componentClasses.get(
+      type
+    );
   }
 
   /**
@@ -319,13 +331,14 @@ export class PropertyInspector extends LitElement {
     }
 
     try {
-      const registry = getComponentRegistry();
-      const defaultConfig = registry.getDefaultConfig(childType);
-
+      const defaultConfig =
+        this.editorState?.editorComponent.renderer.runtime.componentClasses
+          .get(childType)
+          ?.getDefaultConfig();
 
       let foundId = 1;
-      while(runtime.loadedComponents.get(`${childType}-${foundId}`)){
-        foundId+=1;
+      while (runtime.loadedComponents.get(`${childType}-${foundId}`)) {
+        foundId += 1;
       }
       const childDef: Component = {
         id: `${childType}-${foundId}`,
@@ -393,10 +406,14 @@ export class PropertyInspector extends LitElement {
                 this.handleRenameComponent(input.value);
               }}"
               ?readonly="${this.selectedComponent.id === 'root'}"
-              title="${this.selectedComponent.id === 'root' ? 'Cannot rename root component' : 'Click to rename'}"
+              title="${this.selectedComponent.id === 'root'
+                ? 'Cannot rename root component'
+                : 'Click to rename'}"
             />
           </div>
-          <div class="component-type subtle">${this.selectedComponent.type}</div>
+          <div class="component-type subtle">
+            ${this.selectedComponent.type}
+          </div>
         </div>
         <div class="panel-content">
           ${this.componentSchema.configSchema.properties &&
@@ -406,21 +423,13 @@ export class PropertyInspector extends LitElement {
                 this.selectedComponent.config || {},
                 (name, value) => this.handlePropertyChange(name, value)
               )
-            : html`
-                <div
-                >
-                  No properties to edit
-                </div>
-              `}
+            : html` <div>No properties to edit</div> `}
 
           <!-- Action Buttons -->
           <div class="actions">
             <!-- Change Type -->
             <div>
-              <div
-              >
-                Change Type
-              </div>
+              <div>Change Type</div>
               <select
                 @change="${(event) =>
                   event.target.value &&
@@ -440,7 +449,8 @@ export class PropertyInspector extends LitElement {
             </div>
 
             <!-- Add Child (if component supports children) -->
-            ${this.classForComponentType(this.selectedComponent.type).typeSchema.category == "layout"
+            ${this.classForComponentType(this.selectedComponent.type).typeSchema
+              .category == 'layout'
               ? html`
                   <div>
                     <div

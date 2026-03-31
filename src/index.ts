@@ -2,11 +2,6 @@ import './editor/components/dashboard-editor.ts';
 import './editor/editor-state.ts';
 import type { IBoardBackend } from './editor/types';
 import type { DashboardEditor } from './editor/components/dashboard-editor.ts';
-import { registerBuiltInComponents } from '../src/editor/register-built-in-components.ts';
-
-// Register built-in components with editor
-registerBuiltInComponents();
-
 
 export function createEditor(
   container: HTMLElement,
