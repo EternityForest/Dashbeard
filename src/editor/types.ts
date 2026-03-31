@@ -74,10 +74,10 @@ export interface FileMetadata {
  * Uses BoardDefinition as the single format.
  */
 export interface IBoardBackend {
-  load(id: string): Promise<BoardDefinition>;
+  load(): Promise<BoardDefinition>;
   save(board: BoardDefinition): Promise<void>;
 
-  listResourceFolder(boardid: string, folder: string): Promise<FileMetadata[]>;
+  listResourceFolder(folder: string): Promise<FileMetadata[]>;
 }
 
 /**

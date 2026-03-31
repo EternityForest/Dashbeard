@@ -10,6 +10,7 @@ import { validateBoardComplete } from '../boards/board-validator';
 import { DashboardComponent } from '../components/dashboard-component';
 import type { ComponentConfig } from '../boards/board-types';
 import { Observable } from '../core/observable';
+import { BUILT_IN_COMPONENTS } from '../components/built-in';
 /**
  * Maps board component types to their Node implementations.
  * Populated at runtime to support custom components.
@@ -52,6 +53,19 @@ export class BoardRuntime {
    */
   registerComponentType(type: string, cls: typeof DashboardComponent): void {
     this.componentClasses.set(type, cls);
+  }
+
+   /**
+   * Register built-in component factories with the runtime.
+   */
+  private registerBuiltInComponents(): void {
+    for (const [type, em] of Object.entries(BUILT_IN_COMPONENTS)) {
+      this.registerComponentType(type, em);
+    }
+  }
+
+  constructor(){
+    this.registerBuiltInComponents();
   }
 
   loadComponent(componentDef: ComponentConfig) {

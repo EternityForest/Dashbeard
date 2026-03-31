@@ -7,8 +7,6 @@ import { LitElement, html, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { BoardRuntime } from '../runtime';
 import { BoardDefinition } from '../boards/board-types';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { BUILT_IN_COMPONENTS } from '../components/built-in';
 import type { DashboardComponent } from './dashboard-component';
 import { Observable } from '../core/observable';
 /**
@@ -47,8 +45,6 @@ export class DashboardRenderer extends LitElement {
   async loadBoard(boardDef: BoardDefinition): Promise<void> {
     this.isLoaded = false;
     this.board = boardDef;
-    // Register all built-in component factories
-    this.registerBuiltInComponents();
 
     // Apply theme variable overrides
     this.applyThemeVariables(boardDef);
@@ -107,14 +103,7 @@ export class DashboardRenderer extends LitElement {
     container.appendChild(this.runtime.rootComponent);
   }
 
-  /**
-   * Register built-in component factories with the runtime.
-   */
-  private registerBuiltInComponents(): void {
-    for (const [type, em] of Object.entries(BUILT_IN_COMPONENTS)) {
-      this.runtime.registerComponentType(type, em);
-    }
-  }
+ 
 
   /**
    * Apply CSS variable overrides from board settings.

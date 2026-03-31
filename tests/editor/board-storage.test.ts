@@ -60,7 +60,7 @@ describe('MemoryBackend', () => {
     it('persists a board', async () => {
       const board = { ...sampleBoard };
       await backend.save(board);
-      const loaded = await backend.load(board.id);
+      const loaded = await backend.load();
       expect(loaded.metadata.name).toBe(
         board.metadata.name
       );
@@ -81,7 +81,7 @@ describe('MemoryBackend', () => {
     it('loads a saved board', async () => {
       const board = { ...sampleBoard };
       await backend.save(board);
-      const loaded = await backend.load(board.id);
+      const loaded = await backend.load();
       expect(loaded.id).toBe(board.id);
       expect(loaded.metadata.name).toBe(
         board.metadata.name
@@ -97,9 +97,9 @@ describe('MemoryBackend', () => {
     it('returns a copy not a reference', async () => {
       const board = { ...sampleBoard };
       await backend.save(board);
-      const loaded = await backend.load(board.id);
+      const loaded = await backend.load();
       loaded.metadata.name = 'Modified';
-      const reloaded = await backend.load(board.id);
+      const reloaded = await backend.load();
       expect(reloaded.metadata.name).toBe(
         'Test Board'
       );
@@ -111,7 +111,7 @@ describe('MemoryBackend', () => {
       const board = { ...sampleBoard };
       await backend.save(board);
       await backend.delete(board.id);
-      await expect(backend.load(board.id)).rejects.toThrow(
+      await expect(backend.load()).rejects.toThrow(
         'not found'
       );
     });
@@ -183,7 +183,7 @@ if (typeof localStorage !== 'undefined') {
       it('persists a board', async () => {
         const board = { ...sampleBoard };
         await backend.save(board);
-        const loaded = await backend.load(board.id);
+        const loaded = await backend.load();
         expect(loaded.metadata.name).toBe(
           board.metadata.name
         );
@@ -194,7 +194,7 @@ if (typeof localStorage !== 'undefined') {
       it('loads from localStorage', async () => {
         const board = { ...sampleBoard };
         await backend.save(board);
-        const loaded = await backend.load(board.id);
+        const loaded = await backend.load();
         expect(loaded.id).toBe(board.id);
       });
 
@@ -210,7 +210,7 @@ if (typeof localStorage !== 'undefined') {
         const board = { ...sampleBoard };
         await backend.save(board);
         await backend.delete(board.id);
-        await expect(backend.load(board.id)).rejects.toThrow(
+        await expect(backend.load()).rejects.toThrow(
           'not found'
         );
       });
