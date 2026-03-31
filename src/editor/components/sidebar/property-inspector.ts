@@ -322,8 +322,13 @@ export class PropertyInspector extends LitElement {
       const registry = getComponentRegistry();
       const defaultConfig = registry.getDefaultConfig(childType);
 
+
+      let foundId = 1;
+      while(runtime.loadedComponents.get(`${childType}-${foundId}`)){
+        foundId+=1;
+      }
       const childDef: Component = {
-        id: `${childType}-${Date.now()}`,
+        id: `${childType}-${foundId}`,
         type: childType,
         config: defaultConfig,
         children: [],

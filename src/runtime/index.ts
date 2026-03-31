@@ -251,8 +251,8 @@ export class BoardRuntime {
 
     for (const cfg of cls.defaultChildren) {
       const c = structuredClone(cfg);
-      cfg.id = component.id + '_' + c.id;
-      await this.addComponent(cfg, component.id);
+      c.id = component.id + '-' + c.id;
+      await this.addComponent(c, component.id);
     }
 
     this.nodeGraphRefreshed.notifyObservers();
@@ -443,7 +443,6 @@ export class BoardRuntime {
         await this.graph.loadBinding(binding);
       }
     }
-
   }
 
   /**
