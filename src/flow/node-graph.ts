@@ -30,6 +30,8 @@ export class NodeGraph {
    */
   private loadedBindings = new Map<string, LoadedBinding>();
 
+  private pendingBindings = new Map<string, BindingDefinition>();
+
   public nodeGraphRefreshed: Observable<null> = new Observable<null>(null);
 
   /**
@@ -140,17 +142,23 @@ export class NodeGraph {
    * @param binding The binding definition
    * @throws If filter types not registered or nodes not found
    */
-  async loadBinding(binding: BindingDefinition): Promise<void> {
+  async loadBinding(binding: BindingDefinition, allowPending:boolean=true): Promise<void> {
     const upstreamCompId = binding.fromPort.split('.')[0];
     const downstreamCompId = binding.toPort.split('.')[0];
 
     const upstreamNode = this.getNode(upstreamCompId);
     const downstreamNode = this.getNode(downstreamCompId);
     if (!upstreamNode || !downstreamNode) {
+      if(!allowPending){
       throw new Error(
         `Binding references non-existent component: ${binding.fromPort} → ${binding.toPort}`
       );
     }
+    else{
+      this.pendingBindings.set(binding.id, binding);
+    }
+    }
+
 
     // Detect cycles before connecting
     this.detectCycle(downstreamNode.id, upstreamNode.id);
@@ -158,6 +166,9 @@ export class NodeGraph {
     const loadedBinding = new LoadedBinding(this, binding);
     this.loadedBindings.set(binding.id, loadedBinding);
 
+    if(this.pendingBindings.has(binding.id)){
+      this.pendingBindings.delete(binding.id);
+    }
     await loadedBinding.doConnect();
     this.nodeGraphRefreshed.notifyObservers();
   }
@@ -174,6 +185,16 @@ export class NodeGraph {
     // Find the LoadedBinding that matches these ports
     let bindingToDelete: LoadedBinding | undefined;
     for (const [, loadedBinding] of this.loadedBindings) {
+      if (
+        loadedBinding.config.fromPort === bindingConfig.fromPort &&
+        loadedBinding.config.toPort === bindingConfig.toPort
+      ) {
+        bindingToDelete = loadedBinding;
+        break;
+      }
+    }
+
+    for (const [, loadedBinding] of this.pendingBindings) {
       if (
         loadedBinding.config.fromPort === bindingConfig.fromPort &&
         loadedBinding.config.toPort === bindingConfig.toPort
@@ -286,7 +307,8 @@ export class NodeGraph {
 
     this.nodes.clear();
     this.readyNodes.clear();
-    this.loadedBindings.clear();
+    this.loadedBindings.clear();    
+    this.pendingBindings.clear();
   }
 
   async clear(): Promise<void> {

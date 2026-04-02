@@ -1104,6 +1104,7 @@ table {
     display: flex;
     flex-direction: column;
     flex: 1 1 0%;
+    overflow: auto;
     border-radius: 0px;
     border: none;
     summary {
@@ -1139,6 +1140,10 @@ table {
     margin: 0px;
     padding: 2px;
   }
+}
+
+.hidden{
+  display: none !important;
 }
 
 /*This handles the old style "section box", but also top level HTML section elements. It's basicattly for independant sections of content.*/
@@ -1538,6 +1543,12 @@ A little smaller in flex to allow for expansion or fitting lots on a row*/
         Have nowhere outside it to grab and scroll the whole page*/
     max-height: 70vh;
   }
+}
+
+.w-100vw {
+  width: 100vw;
+  flex-basis: 100vw;
+  max-width: 100vw;
 }
 
 .w-1rem {

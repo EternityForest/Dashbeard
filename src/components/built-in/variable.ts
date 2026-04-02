@@ -14,10 +14,6 @@ import { Port } from '../../flow/port';
 import type { PortData } from '../../flow/data-types';
 import { SourceType } from '../../flow/port';
 
-/**
- * Variable component - simple storage and output of values.
- * Used for constants, state, or user-input values.
- */
 @customElement('ds-variable')
 export class VariableComponent extends DashboardComponent {
   static readonly typeSchema: ComponentTypeSchema = {
@@ -44,19 +40,20 @@ export class VariableComponent extends DashboardComponent {
           description: 'Display label',
           default: 'Variable',
         },
+        visible: {
+          type: 'boolean',
+          description: 'Display in UI',
+          default: false,
+        },
       },
     },
   };
 
-  /**
-   * Reactive property for the current value.
-   */
   @property() value: unknown = null;
 
-  /**
-   * Display label.
-   */
   @property() label: string = 'Variable';
+
+  @property() visible: boolean = true;
 
   constructor(config: ComponentConfig) {
     super(config);
@@ -88,6 +85,7 @@ export class VariableComponent extends DashboardComponent {
     const config = this.componentConfig;
     if (config) {
       this.label = (config.config.label as string) || 'Variable';
+      this.visible = (config.config.visible as boolean);
 
       // Check if type changed - requires recreation with new port
       const currentPort = this.node.getOutputPort('value');
@@ -126,7 +124,7 @@ export class VariableComponent extends DashboardComponent {
    */
   override render(): TemplateResult {
     return html`
-      <div class="small-dashboard-widget-container">
+      <div class="small-dashboard-widget-container${this.visible?'':' hidden'}">
         <label>${this.label}</label>
         <input
           type="text"
