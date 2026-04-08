@@ -115,9 +115,7 @@ export class NodeGraph {
     if (upstreamNodeId === downstreamNodeId) {
       return false;
     }
-    if (upstreamPortName === downstreamPortName) {
-      return false;
-    }
+
     const upstreamPortObj = upstreamNode.getInputPort(upstreamPortName);
     const downstreamPortObj = downstreamNode.getOutputPort(downstreamPortName);
 
@@ -142,23 +140,24 @@ export class NodeGraph {
    * @param binding The binding definition
    * @throws If filter types not registered or nodes not found
    */
-  async loadBinding(binding: BindingDefinition, allowPending:boolean=true): Promise<void> {
+  async loadBinding(
+    binding: BindingDefinition,
+    allowPending: boolean = true
+  ): Promise<void> {
     const upstreamCompId = binding.fromPort.split('.')[0];
     const downstreamCompId = binding.toPort.split('.')[0];
 
     const upstreamNode = this.getNode(upstreamCompId);
     const downstreamNode = this.getNode(downstreamCompId);
     if (!upstreamNode || !downstreamNode) {
-      if(!allowPending){
-      throw new Error(
-        `Binding references non-existent component: ${binding.fromPort} → ${binding.toPort}`
-      );
+      if (!allowPending) {
+        throw new Error(
+          `Binding references non-existent component: ${binding.fromPort} → ${binding.toPort}`
+        );
+      } else {
+        this.pendingBindings.set(binding.id, binding);
+      }
     }
-    else{
-      this.pendingBindings.set(binding.id, binding);
-    }
-    }
-
 
     // Detect cycles before connecting
     this.detectCycle(downstreamNode.id, upstreamNode.id);
@@ -166,7 +165,7 @@ export class NodeGraph {
     const loadedBinding = new LoadedBinding(this, binding);
     this.loadedBindings.set(binding.id, loadedBinding);
 
-    if(this.pendingBindings.has(binding.id)){
+    if (this.pendingBindings.has(binding.id)) {
       this.pendingBindings.delete(binding.id);
     }
     await loadedBinding.doConnect();
@@ -196,8 +195,8 @@ export class NodeGraph {
 
     for (const [, loadedBinding] of this.pendingBindings) {
       if (
-        loadedBinding.config.fromPort === bindingConfig.fromPort &&
-        loadedBinding.config.toPort === bindingConfig.toPort
+        loadedBinding.fromPort === bindingConfig.fromPort &&
+        loadedBinding.toPort === bindingConfig.toPort
       ) {
         bindingToDelete = loadedBinding;
         break;
@@ -263,10 +262,13 @@ export class NodeGraph {
     visited.add(source);
 
     // Get all nodes this source connects to (downstream connections)
-    const outgoing: string[] = this.loadedBindings
-      .values()
-      .filter((b: LoadedBinding) => b.sourceNode.id === source)
-      .map((b: LoadedBinding) => b.destinationNode.id);
+    const outgoing: string[] = [];
+
+    this.loadedBindings.forEach((b) => {
+      if (b.sourceNode?.id === source) {
+        outgoing.push(b.destinationNode?.id);
+      }
+    });
 
     for (const next of outgoing) {
       if (this.hasPath(next, target, visited)) return true;
@@ -307,7 +309,7 @@ export class NodeGraph {
 
     this.nodes.clear();
     this.readyNodes.clear();
-    this.loadedBindings.clear();    
+    this.loadedBindings.clear();
     this.pendingBindings.clear();
   }
 

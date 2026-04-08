@@ -75,13 +75,13 @@ export class Port {
   /**
    * JSON Schema describing the data format for this port.
    */
-  readonly schema: PortSchema;
+  readonly schema= new Observable<PortSchema>({type:"any"});
 
   /** Observable for tracking port state changes */
   private stateChanged = new Observable({});
 
   /* At most 1 upstream connection */
-  private upstreamConnection: Port | null = null;
+  public upstreamConnection=  new Observable<Port|null>(null);
 
   /**
    * Handlers for incoming data.
@@ -108,7 +108,8 @@ export class Port {
     this.name = name;
     this.type = type;
     this.isOutput = isOutput;
-    this.schema = schema;
+    schema.type = type;
+    this.schema.set(schema);
   }
 
   /**
@@ -122,7 +123,7 @@ export class Port {
       return null;
     }
     // Upstream ports have at most 1 downstream connection
-    return this.upstreamConnection;
+    return this.upstreamConnection.get();
   }
 
   /**
@@ -132,7 +133,7 @@ export class Port {
     if (this.isOutput) {
       throw new Error('hasConnection() called on upstream port');
     }
-    return this.upstreamConnection !== null;
+    return this.upstreamConnection.get() !== null;
   }
 
   /**
@@ -254,21 +255,21 @@ export class Port {
       );
     }
 
-    if (downstreamPort.upstreamConnection !== null) {
+    if (downstreamPort.upstreamConnection.get() !== null) {
       console.warn(
         `Upstream port ${this.name} already connected ` +
-          `to ${downstreamPort.upstreamConnection.getFullName()}`
+          `to ${downstreamPort.upstreamConnection.get()!.getFullName()}`
       );
-      if (downstreamPort.upstreamConnection !== this) {
+      if (downstreamPort.upstreamConnection.get() !== this) {
         throw new Error(
           `Upstream port ${this.name} already connected ` +
-            `to ${downstreamPort.upstreamConnection.getFullName()}`
+            `to ${downstreamPort.upstreamConnection.get()!.getFullName()}`
         );
       }
     }
 
     // Establish connection
-    downstreamPort.upstreamConnection = this;
+    downstreamPort.upstreamConnection.set(this);
 
     // Add data propagation handler on UPSTREAM to send to downstream
     const x = this.addDataHandler(async (data, sourceType) => {
@@ -306,7 +307,7 @@ export class Port {
       unsub();
     }
 
-    this.upstreamConnection = null;
+    this.upstreamConnection.set(null);
     this.stateChanged.set({ timestamp: Date.now() });
   }
 
@@ -319,7 +320,7 @@ export class Port {
     for (const unsub of this._upstreamBindingUnsubscribers) {
       unsub();
     }
-    this.upstreamConnection = null;
+    this.upstreamConnection.set(null)
     this.stateChanged.clearObservers();
   }
 }

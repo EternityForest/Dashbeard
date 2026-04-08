@@ -34,8 +34,9 @@ export const defaultBoard: BoardDefinition = {
         id: 'comp-2',
         type: 'variable',
         config: {
-          defaultValue: 'Hello World',
+          defaultValue: '89',
           label: 'Output',
+          type: "number"
         },
       },
     ],

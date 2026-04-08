@@ -50,7 +50,7 @@ export class SliderComponent extends DashboardComponent {
           default: 'Value',
         },
       },
-    }
+    },
   };
 
   /**
@@ -81,13 +81,19 @@ export class SliderComponent extends DashboardComponent {
   constructor(config: ComponentConfig) {
     super(config);
 
-    this.node
-      .addPort(new Port('value', 'number', false))
-      .addDataHandler(this.onPortData.bind(this));
+    const port = this.node.addPort(
+      new Port('value', 'number', false, { type: 'number' })
+    );
 
-    this.value = config.config.defaultValue as number ?? 50;
+    port.addDataHandler(this.onPortData.bind(this));
+
+    this.value = (config.config.defaultValue as number) ?? 50;
 
     this.onConfigUpdate();
+
+    port.upstreamConnection.subscribe(() => {
+      this.onConfigUpdate();
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -105,12 +111,15 @@ export class SliderComponent extends DashboardComponent {
    */
   public override onConfigUpdate(): void {
     const config = this.componentConfig;
-    const specificConfig: Record<string, unknown> = this.componentConfig.config || {};
+    const specificConfig: Record<string, unknown> =
+      this.componentConfig.config || {};
 
-    if (config) {
-      this.min = (specificConfig.min as number) ?? 0;
-      this.max = (specificConfig.max as number) ?? 100;
-      this.step = (specificConfig.step as number) ?? 1;
+    const sourceportschema = this.node.getInputPort('value').getUpstreamPort()?.schema.get();
+
+    if (sourceportschema) {
+      this.min = sourceportschema.min as number ?? 0;
+      this.max =  sourceportschema.max as number  ?? 100;
+      this.step = sourceportschema.step as number  ?? 1;
       this.label = (specificConfig.label as string) || 'Slider';
     }
     this.requestUpdate();

@@ -4,8 +4,10 @@
  * Each filter transforms data flowing through it.
  */
 
+import type { PortSchema } from './port'
 import { Node } from './node';
 import { Port, SourceType } from './port';
+import { BindingFilterItem } from '@/boards/board-types';
 
 /**
  * Base class for filter implementations.
@@ -77,13 +79,13 @@ export interface FilterManifest {
 
   // Create ports dynamically based on upstream type
   // Must work without knowing downstream type
-  createPorts(upstreamType: string): {
-    input: { name: string; type: string };
-    output: { name: string; type: string };
+  createPorts(upstreamType: PortSchema, config:BindingFilterItem): {
+    input: PortSchema;
+    output: PortSchema;
   };
 
   // Factory function to create a filter implementation instance
-  createImplementation(config: Record<string, unknown>): FilterImplementation;
+  createImplementation(config:BindingFilterItem): FilterImplementation;
 }
 
 /**
@@ -119,11 +121,11 @@ export class FilterRegistry {
  */
 export class Filter {
   manifest: FilterManifest;
-  config: Record<string, unknown>;
+  config: BindingFilterItem;
   node: FilterNode;
   implementation: FilterImplementation;
 
-  constructor(manifest: FilterManifest, config: Record<string, unknown>, filterId: string) {
+  constructor(manifest: FilterManifest, config: BindingFilterItem, filterId: string) {
     this.manifest = manifest;
     this.config = config;
     this.implementation = manifest.createImplementation(config);
@@ -134,8 +136,8 @@ export class Filter {
    * Get the output type this filter produces.
    * If outputType declared, use that. Otherwise same as input.
    */
-  getOutputType(inputType: string): string {
-    return this.manifest.outputType || inputType;
+  getOutputSchema(inputType: PortSchema): PortSchema {
+    return inputType;
   }
 
   destroy(): void {
@@ -162,12 +164,12 @@ export class FilterNode extends Node {
    * Set up the filter's ports based on the upstream type.
    * Called after the filter is added to the graph.
    */
-  setupPorts(upstreamType: string): void {
+  setupPorts(upstreamType: PortSchema, config:BindingFilterItem): void {
     // Create main input/output ports
-    const ports = this.manifest.createPorts(upstreamType);
+    const ports = this.manifest.createPorts(upstreamType, config);
 
-    const inputPort = new Port(ports.input.name, ports.input.type, false);
-    const outputPort = new Port(ports.output.name, ports.output.type, true);
+    const inputPort = new Port('input', ports.input.type, false, ports.input);
+    const outputPort = new Port('output', ports.output.type, true, ports.output);
 
     this.addPort(inputPort);
     this.addPort(outputPort);

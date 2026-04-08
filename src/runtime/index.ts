@@ -494,12 +494,12 @@ export class BoardRuntime {
       .getBindings()
       .filter(
         (b) =>
-          b.upstream.split('.')[0] === componentId ||
-          b.downstream.split('.')[0] === componentId
+          b.config.fromPort.split('.')[0] === componentId ||
+          b.config.toPort.split('.')[0] === componentId
       );
 
     affectedBindings.forEach((b) => {
-      this.graph.removeBindingConfig(b.upstream, b.downstream);
+      this.graph.deleteBinding(b.config);
     });
     // Delete old component (preserve parent reference)
     await this.deleteComponent(componentId, true);
@@ -529,17 +529,17 @@ export class BoardRuntime {
 
     // Re-establish compatible bindings
     for (const binding of affectedBindings) {
-      if (this.isBindingCompatible(binding.upstream, binding.downstream)) {
+      if (this.isBindingCompatible(binding.config.toPort, binding.config.fromPort)) {
         try {
-          await this.graph.addBinding(binding.upstream, binding.downstream);
+          await this.graph.loadBinding(binding.config);
         } catch (err) {
           console.warn(
-            `Failed to restore binding ${binding.upstream} → ${binding.downstream}: ${err}`
+            `Failed to restore binding ${binding.sourcePortName} → ${binding.destinationPortName}: ${err}`
           );
         }
       } else {
         console.info(
-          `Binding ${binding.upstream} → ${binding.downstream} is incompatible after recreation`
+          `Binding ${binding.sourcePortName} → ${binding.destinationPortName} is incompatible after recreation`
         );
       }
     }

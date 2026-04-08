@@ -10,7 +10,7 @@ import type { ComponentConfig } from '../../boards/board-types';
 import type { ComponentTypeSchema } from '../../editor/types';
 import { doSerialized } from '../../core/serialized-actions';
 
-import { Port } from '../../flow/port';
+import { Port, PortSchema } from '../../flow/port';
 import type { PortData } from '../../flow/data-types';
 import { SourceType } from '../../flow/port';
 
@@ -45,6 +45,17 @@ export class VariableComponent extends DashboardComponent {
           description: 'Display in UI',
           default: false,
         },
+
+        min: {
+          type: 'number',
+          description: 'Min val for numeric variables',
+          default: 0,
+        },
+        max: {
+          type: 'number',
+          description: 'Max val for numeric variables',
+          default: 100,
+        },
       },
     },
   };
@@ -60,8 +71,17 @@ export class VariableComponent extends DashboardComponent {
 
     this.value = config.config.defaultValue ?? null;
 
+    const ps: PortSchema = {
+      type: (config.config.type as string) || 'string',
+    };
+
+    if (config.config.type == 'number') {
+      ps.min = config.config.min;
+      ps.max = config.config.max;
+    }
+
     this.node
-      .addPort(new Port('value', config.config.type as string, true))
+      .addPort(new Port('value', config.config.type as string, true, ps))
       .addDataHandler(this.onPortData.bind(this));
     this.onConfigUpdate();
   }
@@ -85,21 +105,13 @@ export class VariableComponent extends DashboardComponent {
     const config = this.componentConfig;
     if (config) {
       this.label = (config.config.label as string) || 'Variable';
-      this.visible = (config.config.visible as boolean);
+      this.visible = config.config.visible as boolean;
 
-      // Check if type changed - requires recreation with new port
-      const currentPort = this.node.getOutputPort('value');
-      const newType = config.config.type as string;
-
-      if (currentPort && currentPort.type !== newType) {
-        // Type changed - request recreation
-        this.requestRecreation().catch((err) => {
-          console.error('Failed to recreate variable component:', err);
-        });
-        return; // Don't update - component will be recreated
-      }
+      // Type changed - request recreation
+      this.requestRecreation().catch((err) => {
+        console.error('Failed to recreate variable component:', err);
+      });
     }
-    this.requestUpdate();
   }
 
   /**
@@ -124,7 +136,9 @@ export class VariableComponent extends DashboardComponent {
    */
   override render(): TemplateResult {
     return html`
-      <div class="small-dashboard-widget-container${this.visible?'':' hidden'}">
+      <div
+        class="small-dashboard-widget-container${this.visible ? '' : ' hidden'}"
+      >
         <label>${this.label}</label>
         <input
           type="text"

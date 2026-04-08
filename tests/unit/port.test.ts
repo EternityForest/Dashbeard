@@ -210,7 +210,7 @@ describe('Port', () => {
   it('should provide reasonable default schema', () => {
     const port = new Port('test', 'any', false);
 
-    expect(port.schema).toEqual({ type: 'any' });
+    expect(port.schema.get()).toEqual({ type: 'any' });
   });
 
   it('should handle async data propagation', async () => {

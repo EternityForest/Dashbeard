@@ -1,6 +1,7 @@
 /**
  * Built-in filters for common data transformations.
  */
+import type { PortSchema } from '../port'
 
 import { FilterManifest, FilterImplementation } from '../filter';
 import { filterRegistry } from '../filter';
@@ -68,26 +69,6 @@ class ClampRangeImplementation extends FilterImplementation {
   }
 }
 
-/**
- * Conditional filter implementation: passes data based on condition
- */
-class IfImplementation extends FilterImplementation {
-  filterInput(inputValue: unknown): unknown {
-    const num = Number(inputValue) || 0;
-    const condition = String(this.config.condition) || 'nonzero';
-
-    switch (condition) {
-      case 'nonzero':
-        return num !== 0 ? inputValue : null;
-      case 'positive':
-        return num > 0 ? inputValue : null;
-      case 'negative':
-        return num < 0 ? inputValue : null;
-      default:
-        return inputValue;
-    }
-  }
-}
 
 /**
  * Lowpass filter implementation: exponential moving average
@@ -123,10 +104,10 @@ export const invertFilter: FilterManifest = {
   description: 'Logical NOT: returns 1 if input is 0, else 0',
   configSchema: { type: 'object', properties: {} },
   outputType: 'number',
-  createPorts(upstreamType: string) {
+  createPorts(upstreamType: PortSchema) {
     return {
-      input: { name: 'input', type: upstreamType },
-      output: { name: 'output', type: 'number' },
+      input: upstreamType,
+      output: upstreamType,
     };
   },
   createImplementation(config: Record<string, unknown>) {
@@ -160,10 +141,10 @@ export const addFilter: FilterManifest = {
       },
     ],
   },
-  createPorts(upstreamType: string) {
+  createPorts(upstreamType: PortSchema) {
     return {
-      input: { name: 'input', type: upstreamType },
-      output: { name: 'output', type: upstreamType },
+      input: upstreamType,
+      output: upstreamType,
     };
   },
   createImplementation(config: Record<string, unknown>) {
@@ -197,10 +178,19 @@ export const multiplyFilter: FilterManifest = {
       },
     ],
   },
-  createPorts(upstreamType: string) {
+  createPorts(upstreamType: PortSchema, config:Record<string, unknown>) {
+    const os = structuredClone(upstreamType);
+    if(os.min != undefined){
+      os.min = os.min as number * (config.factor as number)
+    }
+
+    if(os.max != undefined){
+      os.max = os.max as number * (config.factor as number)
+    }
+
     return {
-      input: { name: 'input', type: upstreamType },
-      output: { name: 'output', type: upstreamType },
+      input: upstreamType,
+      output: os,
     };
   },
   createImplementation(config: Record<string, unknown>) {
@@ -231,54 +221,17 @@ export const clampRangeFilter: FilterManifest = {
     },
     required: ['min', 'max'],
   },
-  createPorts(upstreamType: string) {
+  createPorts(upstreamType: PortSchema, config:Record<string, unknown>) {
+    const os = structuredClone(upstreamType);
+    os.min = config.min as number;
+    os.max = config.max as number;
     return {
-      input: { name: 'input', type: upstreamType },
-      output: { name: 'output', type: upstreamType },
+      input: upstreamType,
+      output: os,
     };
   },
   createImplementation(config: Record<string, unknown>) {
     return new ClampRangeImplementation(config);
-  },
-};
-
-/**
- * If filter: conditional passthrough.
- * Passes data only if a condition port meets criteria.
- */
-export const ifFilter: FilterManifest = {
-  type: 'if',
-  displayName: 'Conditional',
-  description: 'Passes data only if condition meets criteria',
-  configSchema: {
-    type: 'object',
-    properties: {
-      condition: {
-        type: 'string',
-        enum: ['nonzero', 'positive', 'negative'],
-        default: 'nonzero',
-        description: 'Condition type',
-      },
-    },
-    required: ['condition'],
-  },
-  staticPorts: {
-    inputs: [
-      {
-        name: 'condition',
-        type: 'number',
-        description: 'Condition value to check',
-      },
-    ],
-  },
-  createPorts(upstreamType: string) {
-    return {
-      input: { name: 'input', type: upstreamType },
-      output: { name: 'output', type: upstreamType },
-    };
-  },
-  createImplementation(config: Record<string, unknown>) {
-    return new IfImplementation(config);
   },
 };
 
@@ -301,10 +254,13 @@ export const lowpassFilter: FilterManifest = {
     },
     required: ['alpha'],
   },
-  createPorts(upstreamType: string) {
+  createPorts(upstreamType: PortSchema, config:Record<string, unknown>) {
+    const os = structuredClone(upstreamType);
+    os.min = config.min as number;
+    os.max = config.max as number;
     return {
-      input: { name: 'input', type: upstreamType },
-      output: { name: 'output', type: upstreamType },
+      input: upstreamType,
+      output: os,
     };
   },
   createImplementation(config: Record<string, unknown>) {
@@ -317,5 +273,4 @@ filterRegistry.register(invertFilter);
 filterRegistry.register(addFilter);
 filterRegistry.register(multiplyFilter);
 filterRegistry.register(clampRangeFilter);
-filterRegistry.register(ifFilter);
 filterRegistry.register(lowpassFilter);
