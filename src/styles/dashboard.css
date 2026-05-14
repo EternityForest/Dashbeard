@@ -83,27 +83,7 @@ ds-variable{
 }
 
 ds-slider{
-
-    input[type='range'] {
-      width: 100%;
-      height: 6px;
-    
-    }
-
-    .slider-display {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85em;
-    }
-
-    .value {
-      font-weight: bold;
-      font-family: monospace;
-    }
-
-    .range {
-      opacity: 0.7;
-    }
+  display: contents;
 }
 
 
@@ -115,4 +95,13 @@ ds-slider{
 .panel-header{
   margin: 0px;
   padding: 0px;
+}
+
+ds-heading{
+  display: contents;
+  
+
+  h2, h3, h4,h5, h6{
+    height: var(--control-height);
+  }
 }

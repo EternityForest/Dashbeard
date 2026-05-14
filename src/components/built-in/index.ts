@@ -12,6 +12,8 @@ import { PlainLayoutComponent } from './plain-layout';
 import { PanelBodyComponent } from './panel-body';
 import { PanelHeaderComponent } from './panel-header';
 import { HeadingComponent } from './section-heading';
+import { formLayoutComponent as FormLayoutComponent } from './form-layout';
+import { ToolBarComponent } from './tool-bar';
 /**
  * Registry mapping component type names to their constructors.
  */
@@ -26,6 +28,8 @@ export const BUILT_IN_COMPONENTS: Record<
   'panel-header': PanelHeaderComponent,
   'panel-body': PanelBodyComponent,
   'plain-layout': PlainLayoutComponent,
+  'form-layout': FormLayoutComponent,
+  'tool-bar': ToolBarComponent,
 
   'heading':HeadingComponent
 };

@@ -219,8 +219,7 @@ function renderBooleanField(
                   margin-bottom: 12px;
                   font-size: 13px; cursor: pointer;">
       <input type="checkbox"
-             style="width: 16px; height: 16px;
-                     cursor: pointer; margin-right: 8px;"
+             class="toggle"
              .checked="${checked}"
              @change="${(e: Event) =>
                onChange(

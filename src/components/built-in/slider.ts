@@ -114,12 +114,15 @@ export class SliderComponent extends DashboardComponent {
     const specificConfig: Record<string, unknown> =
       this.componentConfig.config || {};
 
-    const sourceportschema = this.node.getInputPort('value').getUpstreamPort()?.schema.get();
+    const sourceportschema = this.node
+      .getInputPort('value')
+      .getUpstreamPort()
+      ?.schema.get();
 
     if (sourceportschema) {
-      this.min = sourceportschema.min as number ?? 0;
-      this.max =  sourceportschema.max as number  ?? 100;
-      this.step = sourceportschema.step as number  ?? 1;
+      this.min = (sourceportschema.min as number) ?? 0;
+      this.max = (sourceportschema.max as number) ?? 100;
+      this.step = (sourceportschema.step as number) ?? 1;
       this.label = (specificConfig.label as string) || 'Slider';
     }
     this.requestUpdate();
@@ -150,10 +153,10 @@ export class SliderComponent extends DashboardComponent {
     const percentage = this.getPercentage();
 
     return html`
-      <div class="small-dashboard-widget-container">
-        <label>${this.label}</label>
-        <div class="slider-wrapper">
+      <label
+        >${this.label} (${this.value})
           <input
+            class="max-w-12-rem"
             type="range"
             .value="${String(this.value)}"
             .min="${String(this.min)}"
@@ -162,12 +165,7 @@ export class SliderComponent extends DashboardComponent {
             @input="${this.handleInput.bind(this)}"
             style="--percentage: ${percentage}%"
           />
-        </div>
-        <div class="slider-display">
-          <span class="value">${this.value}</span>
-          <span class="range">${this.min} - ${this.max}</span>
-        </div>
-      </div>
+      </label>
     `;
   }
 }
