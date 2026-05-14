@@ -29,6 +29,24 @@ export class ComponentTree extends LitElement {
   @property()
   selectedComponentId: string | null = null;
 
+  /**
+   * ID of component being dragged.
+   */
+  @property()
+  draggedComponentId: string | null = null;
+
+  /**
+   * ID of component being dragged over.
+   */
+  @property()
+  dragOverComponentId: string | null = null;
+
+  /**
+   * Whether current drag-over target is valid.
+   */
+  @property()
+  dragOverValid: boolean = false;
+
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     return this; // Renders to the element's light DOM
   }
@@ -94,6 +112,85 @@ export class ComponentTree extends LitElement {
   }
 
   /**
+   * Handle drag start on component tree item.
+   */
+  private handleDragStart(event: DragEvent, componentId: string): void {
+    this.draggedComponentId = componentId;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', componentId);
+    }
+    event.stopPropagation();
+  }
+
+  /**
+   * Handle drag over component tree item.
+   */
+  private handleDragOver(event: DragEvent, targetComponentId: string): void {
+    if (!this.draggedComponentId || this.draggedComponentId === targetComponentId) {
+      event.stopPropagation();
+      return;
+    }
+
+    event.preventDefault();
+
+    // Validate drop target is a layout component
+    const isValid =
+      this.editorState?.isLayoutComponent(targetComponentId) ?? false;
+
+    this.dragOverComponentId = targetComponentId;
+    this.dragOverValid = isValid;
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = isValid ? 'move' : 'none';
+    }
+
+    event.stopPropagation();
+  }
+
+  /**
+   * Handle drag leave from component tree item.
+   */
+  private handleDragLeave(): void {
+    this.dragOverComponentId = null;
+    this.dragOverValid = false;
+  }
+
+  /**
+   * Handle drop on component tree item.
+   */
+  private handleDrop(event: DragEvent, targetComponentId: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!this.dragOverValid || !this.draggedComponentId) {
+      return;
+    }
+
+    try {
+      this.editorState?.moveComponent(
+        this.draggedComponentId,
+        targetComponentId
+      );
+    } catch (err) {
+      alert(
+        `Failed to move component: ${err instanceof Error ? err.message : 'Unknown error'}`
+      );
+    }
+
+    this.handleDragEnd();
+  }
+
+  /**
+   * Handle drag end.
+   */
+  private handleDragEnd(): void {
+    this.draggedComponentId = null;
+    this.dragOverComponentId = null;
+    this.dragOverValid = false;
+  }
+
+  /**
    * Render a single component tree item.
    */
   private renderComponent(
@@ -107,16 +204,25 @@ export class ComponentTree extends LitElement {
       component.children &&
       component.children.length > 0;
 
+    const isSelected = this.selectedComponentId === component.id;
+    const isDraggedOver = this.dragOverComponentId === component.id;
+    const dragClass = isDraggedOver
+      ? this.dragOverValid
+        ? 'drag-over-valid'
+        : 'drag-over-invalid'
+      : '';
+
     return html`
-      <div class="tree-item ${this
-        .selectedComponentId === component.id
-        ? 'selected'
-        : ''}"
-           @click="${() =>
-             this.selectComponent(component.id)}"
-           style="padding-left: ${
-             16 + depth * 16
-           }px;">
+      <div
+        class="tree-item ${isSelected ? 'selected' : ''} ${dragClass}"
+        draggable="true"
+        @click="${() => this.selectComponent(component.id)}"
+        @dragstart="${(e: DragEvent) => this.handleDragStart(e, component.id)}"
+        @dragover="${(e: DragEvent) => this.handleDragOver(e, component.id)}"
+        @dragleave="${() => this.handleDragLeave()}"
+        @drop="${(e: DragEvent) => this.handleDrop(e, component.id)}"
+        @dragend="${() => this.handleDragEnd()}"
+        style="padding-left: ${16 + depth * 16}px;">
         <div class="tree-icon ${category}">
           ${component.children ? 'C' : component
             .type.charAt(0)

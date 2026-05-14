@@ -218,4 +218,146 @@ export class EditorState {
       void this.editorComponent.renderer.rerenderBoard();
     }
   }
+
+  /**
+   * Find the parent of a component by ID.
+   * Returns null if component is root or not found.
+   */
+  public findParent(childId: string): Component | null {
+    const board = this.board.get()!;
+    if (!board.rootComponent) {
+      return null;
+    }
+    return this.findParentInTree(board.rootComponent, childId);
+  }
+
+  /**
+   * Recursively find parent of component in tree.
+   */
+  private findParentInTree(
+    component: Component,
+    childId: string
+  ): Component | null {
+    if (component.children) {
+      for (const child of component.children) {
+        if (child.id === childId) {
+          return component;
+        }
+        const found = this.findParentInTree(child, childId);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Check if a component type is a layout component (can have children).
+   */
+  public isLayoutComponent(componentId: string): boolean {
+    const component = this.findComponent(componentId);
+    if (!component) return false;
+
+    const cls = this.editorComponent.renderer?.runtime.componentClasses.get(
+      component.type
+    );
+    return cls?.typeSchema.category === 'layout';
+  }
+
+  /**
+   * Check if descendantId is in the subtree of ancestorId.
+   * Used to prevent circular parent-child relationships.
+   */
+  private isDescendantOf(ancestorId: string, descendantId: string): boolean {
+    const ancestor = this.findComponent(ancestorId);
+    if (!ancestor?.children) return false;
+
+    for (const child of ancestor.children) {
+      if (child.id === descendantId) return true;
+      if (this.isDescendantOf(child.id, descendantId)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Move a component from its current parent to a new parent.
+   * Updates config, calls onConfigUpdate() on both parents.
+   *
+   * @param componentId ID of component to move
+   * @param newParentId ID of new parent component
+   * @throws Error if validation fails
+   */
+  public moveComponent(componentId: string, newParentId: string): void {
+    // Validation
+    if (componentId === 'root') {
+      throw new Error('Cannot move root component');
+    }
+
+    if (componentId === newParentId) {
+      return; // No-op: moving to current parent
+    }
+
+    if (!this.isLayoutComponent(newParentId)) {
+      throw new Error(
+        `Cannot move component: "${newParentId}" is not a layout component`
+      );
+    }
+
+    if (this.isDescendantOf(componentId, newParentId)) {
+      throw new Error(
+        'Cannot move component: would create circular reference'
+      );
+    }
+
+    // Find component and parents
+    const component = this.findComponent(componentId);
+    const oldParent = this.findParent(componentId);
+    const newParent = this.findComponent(newParentId);
+
+    if (!component || !newParent) {
+      throw new Error('Component or parent not found');
+    }
+
+    // If component has no parent, it's the root (already caught above)
+    if (!oldParent) {
+      throw new Error('Cannot move component without parent');
+    }
+
+    // Remove from old parent
+    if (oldParent.children) {
+      const index = oldParent.children.findIndex((c) => c.id === componentId);
+      if (index !== -1) {
+        oldParent.children.splice(index, 1);
+      }
+    }
+
+    // Add to new parent
+    if (!newParent.children) {
+      newParent.children = [];
+    }
+    newParent.children.push(component);
+
+    // Get runtime instances and trigger updates
+    const oldParentInstance = this.editorComponent.renderer?.runtime.loadedComponents.get(
+      oldParent.id
+    );
+    const newParentInstance = this.editorComponent.renderer?.runtime.loadedComponents.get(
+      newParent.id
+    );
+
+    if (oldParentInstance) {
+      oldParentInstance.onConfigUpdate();
+    }
+
+    if (newParentInstance) {
+      newParentInstance.onConfigUpdate();
+    }
+
+    this.markDirty();
+
+    // Trigger board update
+    const board = this.board.get();
+    if (board) {
+      this.board.set(board);
+    }
+  }
 }

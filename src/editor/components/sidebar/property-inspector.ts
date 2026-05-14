@@ -41,6 +41,12 @@ export class PropertyInspector extends LitElement {
   @property({ type: Array })
   availableTypes: string[] = [];
 
+  /**
+   * Available layout components for parent selector.
+   */
+  @property({ type: Array })
+  layoutComponents: Component[] = [];
+
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     return this; // Renders to the element's light DOM
   }
@@ -60,6 +66,7 @@ export class PropertyInspector extends LitElement {
     // Also subscribe to board changes
     this.editorState.board.subscribe(() => {
       this.updateSelection();
+      this.updateLayoutComponents();
     });
 
     // Load available types
@@ -68,6 +75,8 @@ export class PropertyInspector extends LitElement {
     for (const i of runtime.componentClasses.keys()) {
       this.availableTypes.push(i);
     }
+
+    this.updateLayoutComponents();
   }
 
   /**
@@ -105,6 +114,27 @@ export class PropertyInspector extends LitElement {
     this.componentSchema = schema || null;
 
     this.requestUpdate();
+  }
+
+  /**
+   * Update list of layout components for parent selector.
+   */
+  private updateLayoutComponents(): void {
+    const board = this.editorState?.board.get();
+    if (!board?.rootComponent) {
+      this.layoutComponents = [];
+      return;
+    }
+
+    const layouts: Component[] = [];
+    const collectLayouts = (comp: Component) => {
+      if (this.editorState?.isLayoutComponent(comp.id)) {
+        layouts.push(comp);
+      }
+      comp.children?.forEach(collectLayouts);
+    };
+    collectLayouts(board.rootComponent);
+    this.layoutComponents = layouts;
   }
 
   /**
@@ -318,6 +348,45 @@ export class PropertyInspector extends LitElement {
   }
 
   /**
+   * Handle parent component change.
+   */
+  private handleParentChange(newParentId: string): void {
+    if (!this.selectedComponent || !this.editorState) {
+      return;
+    }
+
+    newParentId = newParentId.trim();
+    if (!newParentId) {
+      alert('Parent ID cannot be empty');
+      return;
+    }
+
+    // Check if new parent exists
+    const newParent = this.editorState.findComponent(newParentId);
+    if (!newParent) {
+      alert(`Component "${newParentId}" not found`);
+      return;
+    }
+
+    // Validate is layout component
+    if (!this.editorState.isLayoutComponent(newParentId)) {
+      alert(
+        `"${newParentId}" is not a layout component and cannot have children`
+      );
+      return;
+    }
+
+    try {
+      this.editorState.moveComponent(this.selectedComponent.id, newParentId);
+      this.requestUpdate();
+    } catch (err) {
+      alert(
+        `Failed to move component: ${err instanceof Error ? err.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
    * Add a child component.
    */
   private async handleAddChild(childType: string): Promise<void> {
@@ -427,6 +496,39 @@ export class PropertyInspector extends LitElement {
 
           <!-- Action Buttons -->
           <div class="actions">
+            <!-- Parent Component -->
+            ${this.selectedComponent.id !== 'root'
+              ? html`
+                  <div>
+                    <div
+                      style="font-size: 11px; color: #999; margin-bottom: 4px; font-weight: 600;"
+                    >
+                      Parent Component
+                    </div>
+                    <input
+                      list="parent-options"
+                      type="text"
+                      .value="${this.editorState?.findParent(
+                        this.selectedComponent.id
+                      )?.id || 'root'}"
+                      @change="${(e: Event) => {
+                        const input = e.target as HTMLInputElement;
+                        this.handleParentChange(input.value);
+                      }}"
+                      title="Select parent component"
+                    />
+                    <datalist id="parent-options">
+                      ${this.layoutComponents.map(
+                        (comp) =>
+                          html`<option value="${comp.id}">
+                            ${comp.id} (${comp.type})
+                          </option>`
+                      )}
+                    </datalist>
+                  </div>
+                `
+              : html``}
+
             <!-- Change Type -->
             <div>
               <div>Change Type</div>
