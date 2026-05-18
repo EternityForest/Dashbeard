@@ -52,7 +52,7 @@ export class DashboardComponent extends LitElement {
         c.config[key] = propSchema.default;
       }
     }
-    return c
+    return structuredClone(c)
   }
   /**
    * Unique identifier for this component instance.

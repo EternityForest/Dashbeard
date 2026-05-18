@@ -44,8 +44,8 @@ export class HeadingComponent extends DashboardComponent {
   public override onConfigUpdate(): void {
     const config = this.componentConfig;
     if (config) {
-      this.title = (config.config.title as string) || 'Heading';
-      this.level = config.config.level as number;
+      this.title = (config?.config?.title as string) || 'Heading';
+      this.level = config?.config?.level as number || 2;
     }
     this.requestUpdate();
   }

@@ -6,11 +6,22 @@ import { PlainLayoutComponent } from './plain-layout';
 @customElement('ds-panel-layout')
 export class PanelLayoutComponent extends PlainLayoutComponent {
   static readonly defaultChildren = [
-    { type: 'panel-header', id: 'header', config: {},
-  },
+    {
+      type: 'panel-header',
+      id: '$parent-header',
+      config: {},
+
+      children: [
+        {
+          type: 'tool-bar',
+          id: '$parent-toolbar',
+          children: [{ type: 'heading', id: '$parent-heading' }],
+        },
+      ],
+    },
     {
       type: 'panel-body',
-      id: 'body',
+      id: '$parent-body',
 
       config: {},
     },

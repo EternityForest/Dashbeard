@@ -5,9 +5,6 @@ import { PlainLayoutComponent } from './plain-layout';
 
 @customElement('ds-panel-body')
 export class PanelBodyComponent extends PlainLayoutComponent {
-  static readonly defaultChildren = [
-  ];
-
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'panel-body',
     displayName: 'Panel Body',

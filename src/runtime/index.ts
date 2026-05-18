@@ -55,7 +55,7 @@ export class BoardRuntime {
     this.componentClasses.set(type, cls);
   }
 
-   /**
+  /**
    * Register built-in component factories with the runtime.
    */
   private registerBuiltInComponents(): void {
@@ -64,7 +64,7 @@ export class BoardRuntime {
     }
   }
 
-  constructor(){
+  constructor() {
     this.registerBuiltInComponents();
   }
 
@@ -243,9 +243,19 @@ export class BoardRuntime {
     componentDef: ComponentConfig,
     parentId?: string
   ): Promise<DashboardComponent> {
+    componentDef = structuredClone(componentDef);
+
+    let children = componentDef.children || []
+
+    delete componentDef.children
+
     const cls = this.componentClasses.get(componentDef.type);
     if (!cls) {
       throw new Error('No component ' + componentDef.type);
+    }
+
+    if (parentId) {
+      componentDef.id = componentDef.id.replace('$parent', parentId);
     }
 
     const component = this.loadComponent(componentDef);
@@ -263,9 +273,13 @@ export class BoardRuntime {
       parent.onConfigUpdate();
     }
 
-    for (const cfg of cls.defaultChildren) {
+
+    if(children?.length==0)
+    {
+      children = cls.defaultChildren
+    }
+    for (const cfg of children ) {
       const c = structuredClone(cfg);
-      c.id = component.id + '-' + c.id;
       await this.addComponent(c, component.id);
     }
 
@@ -457,11 +471,14 @@ export class BoardRuntime {
       }
     }
 
-    const prefix = oldId + "-";
-    for(const i of component.componentConfig?.children || []){
-      if(i.id.startsWith(prefix)){
+    const prefix = oldId + '-';
+    for (const i of component.componentConfig?.children || []) {
+      if (i.id.startsWith(prefix)) {
         const suffix = i.id.substring(prefix.length);
-        await this.renameComponent(i.id, component.componentConfig.id+"-"+suffix);
+        await this.renameComponent(
+          i.id,
+          component.componentConfig.id + '-' + suffix
+        );
       }
     }
   }
@@ -529,7 +546,9 @@ export class BoardRuntime {
 
     // Re-establish compatible bindings
     for (const binding of affectedBindings) {
-      if (this.isBindingCompatible(binding.config.toPort, binding.config.fromPort)) {
+      if (
+        this.isBindingCompatible(binding.config.toPort, binding.config.fromPort)
+      ) {
         try {
           await this.graph.loadBinding(binding.config);
         } catch (err) {

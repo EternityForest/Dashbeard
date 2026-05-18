@@ -27,7 +27,7 @@ export interface ComponentConfig {
   type: string;
 
   /** Configuration specific to this component type */
-  config: Record<string, unknown>;
+  config?: Record<string, unknown>;
 
   /** Optional layout information */
   layout?: {

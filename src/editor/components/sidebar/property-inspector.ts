@@ -7,7 +7,7 @@ import { LitElement, html, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { EditorState } from '../../editor-state';
 import { schemaToFormFields } from '../../utils/schema-to-form';
-import type { Component, ComponentTypeSchema } from '../../types';
+import type { ComponentTypeSchema } from '../../types';
 import type { ComponentConfig } from '@/boards/board-types';
 import { DashboardComponent } from '@/components/dashboard-component';
 
@@ -27,7 +27,7 @@ export class PropertyInspector extends LitElement {
    * Currently selected component (null if none).
    */
   @property({ type: Object })
-  selectedComponent: Component | null = null;
+  selectedComponent: ComponentConfig | null = null;
 
   /**
    * Component type schema for selected component.
@@ -45,7 +45,7 @@ export class PropertyInspector extends LitElement {
    * Available layout components for parent selector.
    */
   @property({ type: Array })
-  layoutComponents: Component[] = [];
+  layoutComponents: ComponentConfig[] = [];
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     return this; // Renders to the element's light DOM
@@ -126,8 +126,8 @@ export class PropertyInspector extends LitElement {
       return;
     }
 
-    const layouts: Component[] = [];
-    const collectLayouts = (comp: Component) => {
+    const layouts: ComponentConfig[] = [];
+    const collectLayouts = (comp: ComponentConfig) => {
       if (this.editorState?.isLayoutComponent(comp.id)) {
         layouts.push(comp);
       }
@@ -299,46 +299,6 @@ export class PropertyInspector extends LitElement {
     }
   }
 
-  /**
-   * Swap component to a different type.
-   */
-  private async handleSwapType(newType: string): Promise<void> {
-    if (!this.selectedComponent || !this.editorState) {
-      return;
-    }
-
-    const runtime = this.editorState.editorComponent.renderer?.runtime;
-    if (!runtime) {
-      return;
-    }
-
-    if (this.selectedComponent.id == 'root') {
-      throw new Error('Cannot change type of root');
-    }
-    try {
-      const newComponent = await runtime.swapComponentType(
-        this.selectedComponent.id,
-        newType
-      );
-      await this.editorState.editorComponent.renderer?.rerenderBoard();
-
-      // Update board state
-      const board = this.editorState.board.get();
-      if (board) {
-        this.editorState.board.set(board);
-      }
-
-      this.editorState.markDirty();
-      this.requestUpdate();
-
-      this.editorState.selectComponent(newComponent.id);
-      this.updateSelection();
-    } catch (err) {
-      console.error('Failed to swap component type:', err);
-      alert('Failed to change component type');
-    }
-  }
-
   private classForComponentType(
     type: string
   ): undefined | typeof DashboardComponent {
@@ -401,20 +361,16 @@ export class PropertyInspector extends LitElement {
 
     try {
       const defaultConfig =
-        this.editorState?.editorComponent.renderer.runtime.componentClasses
-          .get(childType)
-          ?.getDefaultConfig();
+        this.editorState.editorComponent.renderer.runtime.componentClasses
+          .get(childType)!
+          .getDefaultConfig();
 
       let foundId = 1;
       while (runtime.loadedComponents.get(`${childType}-${foundId}`)) {
         foundId += 1;
       }
-      const childDef: Component = {
-        id: `${childType}-${foundId}`,
-        type: childType,
-        config: defaultConfig,
-        children: [],
-      };
+      const childDef: ComponentConfig = defaultConfig;
+      childDef.id = `${childType}-${foundId}`;
 
       // Add to component's children array
       if (!this.selectedComponent.children) {
@@ -472,7 +428,9 @@ export class PropertyInspector extends LitElement {
               .value="${this.selectedComponent.id}"
               @change="${(e: Event) => {
                 const input = e.target as HTMLInputElement;
-                this.handleRenameComponent(input.value);
+                this.handleRenameComponent(input.value).catch((e) => {
+                  alert(e);
+                });
               }}"
               ?readonly="${this.selectedComponent.id === 'root'}"
               title="${this.selectedComponent.id === 'root'
@@ -529,30 +487,9 @@ export class PropertyInspector extends LitElement {
                 `
               : html``}
 
-            <!-- Change Type -->
-            <div>
-              <div>Change Type</div>
-              <select
-                @change="${(event) =>
-                  event.target.value &&
-                  this.handleSwapType(event.target.value)}"
-              >
-                <option>Change Type</option>
-                ${this.availableTypes.map(
-                  (type) =>
-                    html`<option
-                    value="${type}"
-                    title="Change component to ${type}"
-                  >
-                    ${type}
-                  </button>`
-                )}
-              </select>
-            </div>
-
             <!-- Add Child (if component supports children) -->
-            ${this.classForComponentType(this.selectedComponent.type).typeSchema
-              .category == 'layout'
+            ${this.classForComponentType(this.selectedComponent.type)!
+              .typeSchema.category == 'layout'
               ? html`
                   <div>
                     <div
