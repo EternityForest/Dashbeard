@@ -19,9 +19,9 @@
     "allowImportingTsExtensions": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "dashbeard": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"],

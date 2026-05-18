@@ -6,13 +6,12 @@
 import { html, TemplateResult } from 'lit';
 import type { ConfigSchema } from '../types';
 import '../components/resource-browser';
+import { getFormatDatalist } from '../../index';
 
 /**
  * Form field change callback.
  */
-export type FormFieldChange = (
-  value: unknown
-) => void;
+export type FormFieldChange = (value: unknown) => void;
 
 /**
  * Convert a ConfigSchema property to a form field template.
@@ -33,40 +32,15 @@ export function schemaToFormField(
 ): TemplateResult {
   switch (schema.type) {
     case 'string':
-      return renderStringField(
-        name,
-        value,
-        schema,
-        onChange
-      );
+      return renderStringField(name, value, schema, onChange);
     case 'number':
-      return renderNumberField(
-        name,
-        value,
-        schema,
-        onChange
-      );
+      return renderNumberField(name, value, schema, onChange);
     case 'boolean':
-      return renderBooleanField(
-        name,
-        value,
-        schema,
-        onChange
-      );
+      return renderBooleanField(name, value, schema, onChange);
     case 'array':
-      return renderArrayField(
-        name,
-        value,
-        schema,
-        onChange
-      );
+      return renderArrayField(name, value, schema, onChange);
     case 'object':
-      return renderObjectField(
-        name,
-        value,
-        schema,
-        onChange
-      );
+      return renderObjectField(name, value, schema, onChange);
     default:
       return html`
         <div style="color: #999; font-size: 12px;">
@@ -89,9 +63,10 @@ function renderStringField(
 
   // File format: render as resource browser
   if (schema.format === 'file') {
-    const fileFilter = typeof schema.pattern === 'string'
-      ? schema.pattern
-      : schema.fileFilter || '';
+    const fileFilter =
+      typeof schema.pattern === 'string'
+        ? schema.pattern
+        : schema.fileFilter || '';
 
     return html`
       <ds-resource-browser
@@ -108,51 +83,53 @@ function renderStringField(
   // Enum: render as select dropdown
   if (schema.enum && Array.isArray(schema.enum)) {
     return html`
-      <label style="display: block; margin-bottom: 12px;
-                    font-size: 13px;">
+      <label
+        style="display: block; margin-bottom: 12px;
+                    font-size: 13px;"
+      >
         <div style="font-weight: 500; margin-bottom: 4px;">
           ${formatName(name)}
         </div>
         <select
           style="width: 100%;"
           @change="${(e: Event) =>
-            onChange(
-              (e.target as HTMLSelectElement).value
-            )}"
+            onChange((e.target as HTMLSelectElement).value)}"
         >
-          ${(schema.enum as unknown[]).map(
-            (opt) => (stringValue === String(opt) ?html`
-              <option value="${String(opt)}"
-                selected
-              >
-                ${String(opt)}
-              </option>
-            `:
-            html`
-              <option value="${String(opt)}">
-                ${String(opt)}
-              </option>
-            `)
+          ${(schema.enum as unknown[]).map((opt) =>
+            stringValue === String(opt)
+              ? html`
+                  <option value="${String(opt)}" selected>
+                    ${String(opt)}
+                  </option>
+                `
+              : html` <option value="${String(opt)}">${String(opt)}</option> `
           )}
         </select>
       </label>
     `;
   }
 
+  const fmt = schema.format || '';
+  // Check if format has a registered datalist
+  const datalistId=  getFormatDatalist(fmt);
+
   // Regular text input
   return html`
-    <label style="display: block; margin-bottom: 12px;
-                  font-size: 13px;">
+    <label
+      style="display: block; margin-bottom: 12px;
+                  font-size: 13px;"
+    >
       <div style="font-weight: 500; margin-bottom: 4px;">
         ${formatName(name)}
       </div>
-      <input type="text"
-             style="width: 100%;"
-             .value="${stringValue}"
-             @change="${(e: Event) =>
-               onChange(
-                 (e.target as HTMLInputElement).value
-               )}" />
+      <input
+        type="text"
+        style="width: 100%;"
+        .value="${stringValue}"
+        list="${datalistId}"
+        @change="${(e: Event) =>
+          onChange((e.target as HTMLInputElement).value)}"
+      />
     </label>
   `;
 }
@@ -167,38 +144,29 @@ function renderNumberField(
   onChange: FormFieldChange
 ): TemplateResult {
   const numValue = Number(value || 0);
-  const min =
-    typeof schema.minimum === 'number'
-      ? schema.minimum
-      : undefined;
-  const max =
-    typeof schema.maximum === 'number'
-      ? schema.maximum
-      : undefined;
+  const min = typeof schema.minimum === 'number' ? schema.minimum : undefined;
+  const max = typeof schema.maximum === 'number' ? schema.maximum : undefined;
 
   return html`
-    <label style="display: block; margin-bottom: 12px;
-                  font-size: 13px;">
+    <label
+      style="display: block; margin-bottom: 12px;
+                  font-size: 13px;"
+    >
       <div style="font-weight: 500; margin-bottom: 4px;">
         ${formatName(name)}
       </div>
 
-      <input type="number"
-             style="width: 100%;"
-             .value="${String(numValue)}"
-             ?min="${min !== undefined}"
-             .min="${min?.toString() || ''}"
-             ?max="${max !== undefined}"
-             .max="${max?.toString() || ''}"
-             @change="${(e: Event) =>
-               onChange(
-                 Number(
-                   (
-                     e.target as
-                     HTMLInputElement
-                   ).value
-                 )
-               )}" />
+      <input
+        type="number"
+        style="width: 100%;"
+        .value="${String(numValue)}"
+        ?min="${min !== undefined}"
+        .min="${min?.toString() || ''}"
+        ?max="${max !== undefined}"
+        .max="${max?.toString() || ''}"
+        @change="${(e: Event) =>
+          onChange(Number((e.target as HTMLInputElement).value))}"
+      />
     </label>
   `;
 }
@@ -215,20 +183,20 @@ function renderBooleanField(
   const checked = Boolean(value);
 
   return html`
-    <label style="display: flex; align-items: center;
+    <label
+      style="display: flex; align-items: center;
                   margin-bottom: 12px;
-                  font-size: 13px; cursor: pointer;">
-      <input type="checkbox"
-             class="toggle"
-             .checked="${checked}"
-             @change="${(e: Event) =>
-               onChange(
-                 (e.target as HTMLInputElement).checked
-               )}" />
+                  font-size: 13px; cursor: pointer;"
+    >
+      <input
+        type="checkbox"
+        class="toggle"
+        .checked="${checked}"
+        @change="${(e: Event) =>
+          onChange((e.target as HTMLInputElement).checked)}"
+      />
       <div>
-        <div style="font-weight: 500;">
-          ${formatName(name)}
-        </div>
+        <div style="font-weight: 500;">${formatName(name)}</div>
       </div>
     </label>
   `;
@@ -244,13 +212,13 @@ function renderArrayField(
   schema: ConfigSchema,
   onChange: FormFieldChange
 ): TemplateResult {
-  const arrayValue = Array.isArray(value)
-    ? value
-    : [];
+  const arrayValue = Array.isArray(value) ? value : [];
 
   return html`
-    <div style="display: block; margin-bottom: 12px;
-                font-size: 13px;">
+    <div
+      style="display: block; margin-bottom: 12px;
+                font-size: 13px;"
+    >
       <div style="font-weight: 500; margin-bottom: 4px;">
         ${formatName(name)} (Array)
       </div>
@@ -271,24 +239,21 @@ function renderObjectField(
   schema: ConfigSchema,
   onChange: FormFieldChange
 ): TemplateResult {
-  const objValue = typeof value === 'object'
-    ? value
-    : null;
+  const objValue = typeof value === 'object' ? value : null;
   const keyCount =
     objValue && typeof objValue === 'object'
-      ? Object.keys(objValue as Record<string, unknown>)
-          .length
+      ? Object.keys(objValue as Record<string, unknown>).length
       : 0;
 
   return html`
-    <div style="display: block; margin-bottom: 12px;
-                font-size: 13px;">
+    <div
+      style="display: block; margin-bottom: 12px;
+                font-size: 13px;"
+    >
       <div style="font-weight: 500; margin-bottom: 4px;">
         ${formatName(name)} (Object)
       </div>
-      <div style="font-size: 12px; color: #666;">
-        ${keyCount} properties
-      </div>
+      <div style="font-size: 12px; color: #666;">${keyCount} properties</div>
     </div>
   `;
 }
@@ -298,12 +263,10 @@ function renderObjectField(
  * Converts camelCase to Title Case.
  */
 function formatName(name: string): string {
-  return (
-    name
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, (str) => str.toUpperCase())
-      .trim()
-  );
+  return name
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim();
 }
 
 /**
@@ -318,29 +281,21 @@ function formatName(name: string): string {
 export function schemaToFormFields(
   configSchema: ConfigSchema,
   config: Record<string, unknown>,
-  onChange: (
-    name: string,
-    value: unknown
-  ) => void
+  onChange: (name: string, value: unknown) => void
 ): TemplateResult {
   const properties = configSchema.properties || {};
   const entries = Object.entries(properties);
 
   if (entries.length === 0) {
     return html`
-      <div style="font-size: 12px; color: #999;">
-        No properties to edit
-      </div>
+      <div style="font-size: 12px; color: #999;">No properties to edit</div>
     `;
   }
 
   return html`
     ${entries.map(([name, schema]) =>
-      schemaToFormField(
-        name,
-        config[name],
-        schema,
-        (value) => onChange(name, value)
+      schemaToFormField(name, config[name], schema, (value) =>
+        onChange(name, value)
       )
     )}
   `;
