@@ -132,7 +132,7 @@ export const BOARD_SCHEMA: Record<string, unknown> = {
           items: { $ref: '#/$defs/component' },
         },
       },
-      required: ['id', 'type', 'config'],
+      required: ['id', 'type'],
     },
   },
 
@@ -165,7 +165,7 @@ export const BOARD_SCHEMA: Record<string, unknown> = {
                 type: { type: 'string' },
                 config: { type: 'object' },
               },
-              required: ['type', 'config'],
+              required: ['type'],
             },
           },
           toPort: { type: 'string' },

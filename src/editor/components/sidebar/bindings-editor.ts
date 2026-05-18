@@ -971,6 +971,18 @@ export class BindingsEditor extends LitElement {
         >
           Create Binding
         </button>
+
+        ${!this.formState.fromPort || !this.formState.toPort
+          ? html`
+              <div class="warning-hint" style="margin-top: 8px; font-size: 11px; color: #f57c00; background: #fff3e0; padding: 6px 8px; border-radius: 3px; border-left: 3px solid #ff9800;">
+                ${!this.formState.fromPort && !this.formState.toPort
+                  ? html`Select both a source port and target port to create a binding.`
+                  : !this.formState.fromPort
+                    ? html`Select a source (output) port to choose from.`
+                    : html`Select a target (input) port to bind to.`}
+              </div>
+            `
+          : ''}
       </form>
     `;
   }

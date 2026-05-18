@@ -75,13 +75,13 @@ export class Port {
   /**
    * JSON Schema describing the data format for this port.
    */
-  readonly schema= new Observable<PortSchema>({type:"any"});
+  readonly schema = new Observable<PortSchema>({ type: 'any' });
 
   /** Observable for tracking port state changes */
   private stateChanged = new Observable({});
 
   /* At most 1 upstream connection */
-  public upstreamConnection=  new Observable<Port|null>(null);
+  public upstreamConnection = new Observable<Port | null>(null);
 
   /**
    * Handlers for incoming data.
@@ -105,6 +105,15 @@ export class Port {
     isOutput: boolean,
     schema: PortSchema = { type: 'any' }
   ) {
+    if (!(typeof type === 'string')) {
+      throw new Error('type must be a string');
+    }
+    if (!(typeof name === 'string')) {
+      throw new Error('name must be a string');
+    }
+    if (!(typeof isOutput === 'boolean')) {
+      throw new Error('isOutput must be a boolean');
+    }
     this.name = name;
     this.type = type;
     this.isOutput = isOutput;
@@ -320,7 +329,7 @@ export class Port {
     for (const unsub of this._upstreamBindingUnsubscribers) {
       unsub();
     }
-    this.upstreamConnection.set(null)
+    this.upstreamConnection.set(null);
     this.stateChanged.clearObservers();
   }
 }
