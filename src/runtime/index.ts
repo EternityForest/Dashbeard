@@ -113,7 +113,13 @@ export class BoardRuntime {
 
     // Establish all bindings (including filter stacks)
     for (const binding of validated.bindings) {
+      try{
       await this.graph.loadBinding(binding);
+      }
+      catch(e){
+        console.error(e)
+        alert("Error loading binding "+binding.id);
+      }
     }
 
     // Initialize all nodes

@@ -44,6 +44,13 @@ export interface PortSchema {
   direction: 'input' | 'output';
   type: string;
   description?: string;
+
+  min?: number;
+  max?: number;
+  hi?: number;
+  lo?: number;
+  step?: number;
+  unit?: string;
 }
 
 /**

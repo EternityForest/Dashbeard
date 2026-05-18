@@ -4,6 +4,8 @@
  */
 
 import { Observer, Observable } from '../core/observable';
+import type {PortSchema } from "../editor/types";
+
 import { PortData } from './data-types';
 import type { Node } from './node';
 
@@ -22,16 +24,6 @@ function isPortData(obj: unknown): obj is PortData {
   return (
     typeof data.value !== 'undefined' && typeof data.timestamp === 'number'
   );
-}
-
-/**
- * Schema for port data validation.
- * Subclasses may override to provide stricter validation.
- */
-export interface PortSchema {
-  type: string;
-  description?: string;
-  [key: string]: unknown;
 }
 
 /**
