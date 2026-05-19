@@ -51,6 +51,7 @@ export class NodeGraph {
       throw new Error(`Node with ID "${node.id}" already exists`);
     }
 
+    node.graph = this;
     this.nodes.set(node.id, node);
   }
 
@@ -133,6 +134,13 @@ export class NodeGraph {
     return false;
   }
 
+
+  public async tryPendingBindings(): Promise<void> {
+    for (const binding of this.pendingBindings.values()) {
+      await this.loadBinding(binding, false);
+    }
+  }
+
   /**
    * Load a binding with optional filter stack.
    * Creates filter nodes and wires them between upstream and downstream.
@@ -145,7 +153,9 @@ export class NodeGraph {
     allowPending: boolean = true
   ): Promise<void> {
     const upstreamCompId = binding.fromPort.split('.')[0];
+    const upstreamPortName = binding.fromPort.split('.')[1];
     const downstreamCompId = binding.toPort.split('.')[0];
+    const downstreamPortName = binding.toPort.split('.')[1];
 
     const upstreamNode = this.getNode(upstreamCompId);
     const downstreamNode = this.getNode(downstreamCompId);
@@ -157,6 +167,21 @@ export class NodeGraph {
       } else {
         this.pendingBindings.set(binding.id, binding);
       }
+      return;
+    }
+
+    // Check if the ports exist
+    const upstreamPort = upstreamNode.outputPorts.get(upstreamPortName);
+    const downstreamPort = downstreamNode.inputPorts.get(downstreamPortName);
+    if (!upstreamPort || !downstreamPort) {
+      if (!allowPending) {
+        throw new Error(
+          `Binding references non-existent port: ${binding.fromPort} → ${binding.toPort}`
+        );
+      } else {
+        this.pendingBindings.set(binding.id, binding);
+      }
+      return;
     }
 
     // Detect cycles before connecting
@@ -164,11 +189,12 @@ export class NodeGraph {
 
     const loadedBinding = new LoadedBinding(this, binding);
     this.loadedBindings.set(binding.id, loadedBinding);
+    
+    await loadedBinding.doConnect();
 
     if (this.pendingBindings.has(binding.id)) {
       this.pendingBindings.delete(binding.id);
     }
-    await loadedBinding.doConnect();
     this.nodeGraphRefreshed.notifyObservers();
   }
 

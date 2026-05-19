@@ -5,7 +5,7 @@
  */
 
 import { Port } from './port';
-
+import type { NodeGraph } from './node-graph';
 
 /**
  * Base class for all nodes in the data flow graph.
@@ -13,7 +13,6 @@ import { Port } from './port';
  * They connect to other nodes via ports.
  */
 export class Node {
-
   /**
    * Unique identifier for this node instance.
    */
@@ -27,7 +26,7 @@ export class Node {
    * Map of downstream-facing ports (consumers).
    * Keyed by port name.
    */
- public inputPorts: Map<string, Port> = new Map();
+  public inputPorts: Map<string, Port> = new Map();
 
   /**
    * Map of upstream-facing ports (producers).
@@ -44,6 +43,8 @@ export class Node {
 
   private onReadyListeners: (() => void)[] = [];
 
+  public graph: NodeGraph | null = null;
+
   constructor(id: string) {
     this._id = id;
   }
@@ -56,18 +57,16 @@ export class Node {
   }
 
   destroy(): void {
-
     this.inputPorts.forEach((port) => {
       port.destroy();
-    })
+    });
     this.outputPorts.forEach((port) => {
       port.destroy();
-    })
-    this.onReadyListeners = []; 
+    });
+    this.onReadyListeners = [];
     this.inputPorts.clear();
     this.outputPorts.clear();
   }
-
 
   addPort(port: Port): Port {
     port.parentNode = this;
@@ -77,8 +76,12 @@ export class Node {
       this.outputPorts.set(port.name, port);
     }
     this.allPorts.set(port.name, port);
+
+    if (this.graph) {
+      this.graph?.tryPendingBindings().catch(console.error);
+    }
     return port;
-  } 
+  }
 
   /**
    * Initialize the node.
@@ -86,14 +89,13 @@ export class Node {
    * Override to perform setup (e.g., subscribe to config changes).
    */
   async onReady(): Promise<void> {
-    if(this.isReady) {
+    if (this.isReady) {
       return;
     }
     for (const listener of this.onReadyListeners) {
       listener();
     }
     this.isReady = true;
-
   }
 
   addOnReadyListener(listener: () => void): void {
@@ -125,7 +127,7 @@ export class Node {
    * Get a specific downstream port by name.
    */
   getInputPort(name: string): Port {
-    if(!this.inputPorts.has(name)) {
+    if (!this.inputPorts.has(name)) {
       throw new Error(`Port not found: ${name} on ${this.id}`);
     }
     return this.inputPorts.get(name)!;
@@ -135,15 +137,14 @@ export class Node {
    * Get a specific upstream port by name.
    */
   getOutputPort(name: string): Port {
-    if(!this.outputPorts.has(name)) {
+    if (!this.outputPorts.has(name)) {
       throw new Error(`Port not found: ${name} on ${this.id}`);
     }
     return this.outputPorts.get(name)!;
   }
 
   listPorts(): string[] {
-    const ports =[...this.inputPorts.values(), ...this.outputPorts.values()];
-    return ports.map(port => port.name);
+    const ports = [...this.inputPorts.values(), ...this.outputPorts.values()];
+    return ports.map((port) => port.name);
   }
-
 }
