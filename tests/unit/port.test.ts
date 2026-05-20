@@ -14,7 +14,7 @@ describe('Port', () => {
   });
 
   it('should track last data received', async () => {
-    const port = new Port('test', 'any', false);
+    const port = new Port({name: 'test', type:  'any', direction: 'input'});
     const data = createPortData(42);
 
     await port.onNewData(data, SourceType.PortOwner);
@@ -23,7 +23,7 @@ describe('Port', () => {
   });
 
   it('should invoke data handlers on new data', async () => {
-    const port = new Port('test', 'any', false);
+    const port = new Port({name: 'test', type:  'any', direction: 'input'});
     const handler = vi.fn();
 
     port.addDataHandler(handler);
@@ -35,7 +35,7 @@ describe('Port', () => {
   });
 
   it('should allow removing data handlers', async () => {
-    const port = new Port('test', 'any', false);
+    const port = new Port({name: 'test', type:  'any', direction: 'input'});
     const handler = vi.fn();
 
     const unsubscribe = port.addDataHandler(handler);
@@ -48,7 +48,7 @@ describe('Port', () => {
   });
 
   it('should reject invalid PortData', async () => {
-    const port = new Port('test', 'any', false);
+    const port = new Port({name: 'test', type:  'any', direction: 'input'});
 
     await expect(
       port.onNewData({ invalid: true } as never, SourceType.PortOwner)
@@ -56,36 +56,36 @@ describe('Port', () => {
   });
 
   it('should reject connection from downstream port', async () => {
-    const upstream = new Port('up', 'number', true);
-    const downstream = new Port('down', 'number', false);
+    const upstream = new Port({name: 'up', type:  'number', direction: 'output'});
+    const downstream = new Port({name: 'down', type:  'number', direction: 'input'});
 
     await expect(downstream.connectToInput(upstream)).rejects.toThrow();
   });
 
   it('should reject connection to upstream port', async () => {
-    const upstream = new Port('up', 'number', false);
-    const badDownstream = new Port('bad', 'number', false);
+    const upstream = new Port({name: 'up', type:  'number', direction: 'input'});
+    const badDownstream = new Port({name: 'bad', type:  'number', direction: 'input'});
 
     await expect(upstream.connectToInput(badDownstream)).rejects.toThrow();
   });
 
   (it('Should reject connection to itself'),
     async () => {
-      const port = new Port('test', 'any', false);
+      const port = new Port({name: 'test', type:  'any', direction: 'input'});
       await expect(port.connectToInput(port)).rejects.toThrow();
     });
 
   it('should reject type mismatch', async () => {
-    const upstream = new Port('up', 'number', false);
-    const downstream = new Port('down', 'string', true);
+    const upstream = new Port({name: 'up', type:  'number', direction: 'input'});
+    const downstream = new Port({name: 'down', type:  'string', direction: 'output'});
 
     await expect(upstream.connectToInput(downstream)).rejects.toThrow();
   });
 
   it('should reject multiple downstream connections to upstream port', async () => {
-    const upstream = new Port('up', 'number', true);
-    const upstream2 = new Port('down1', 'number', true);
-    const downstream = new Port('down2', 'number', false);
+    const upstream = new Port({name: 'up', type:  'number', direction: 'output'});
+    const upstream2 = new Port({name: 'down1', type:  'number', direction: 'output'});
+    const downstream = new Port({name: 'down2', type:  'number', direction: 'input'});
 
     await upstream.connectToInput(downstream);
 
@@ -93,8 +93,8 @@ describe('Port', () => {
   });
 
   it('should propagate data through connection', async () => {
-    const upstream = new Port('up', 'number', true);
-    const downstream = new Port('down', 'number', false);
+    const upstream = new Port({name: 'up', type:  'number', direction: 'output'});
+    const downstream = new Port({name: 'down', type:  'number', direction: 'input'});
 
     await upstream.connectToInput(downstream);
 
@@ -108,8 +108,8 @@ describe('Port', () => {
   });
 
   it('should propagate last data when connecting', async () => {
-    const upstream = new Port('up', 'number', true);
-    const downstream = new Port('down', 'number', false);
+    const upstream = new Port({name: 'up', type:  'number', direction: 'output'});
+    const downstream = new Port({name: 'down', type:  'number', direction: 'input'});
 
     const data = createPortData(100);
     await upstream.onNewData(data, SourceType.PortOwner);
@@ -120,8 +120,8 @@ describe('Port', () => {
   });
 
   it('should allow disconnecting ports', async () => {
-    const upstream = new Port('up', 'number', true);
-    const downstream = new Port('down', 'number', false);
+    const upstream = new Port({name: 'up', type:  'number', direction: 'output'});
+    const downstream = new Port({name: 'down', type:  'number', direction: 'input'});
 
     await upstream.connectToInput(downstream);
 
@@ -132,7 +132,7 @@ describe('Port', () => {
   });
 
   it('should support onChange for state tracking', async () => {
-    const port = new Port('test', 'any', true);
+    const port = new Port({name: 'test', type:  'any', direction: 'output'});
     const observer = vi.fn();
 
     port.onChange(observer);
@@ -146,8 +146,8 @@ describe('Port', () => {
   });
 
   it('should track connection state', async () => {
-    const upstream = new Port('up', 'number', true);
-    const downstream = new Port('down', 'number', false);
+    const upstream = new Port({name: 'up', type:  'number', direction: 'output'});
+    const downstream = new Port({name: 'down', type:  'number', direction: 'input'});
 
     expect(downstream.hasConnection()).toBe(false);
 
@@ -157,7 +157,7 @@ describe('Port', () => {
   });
 
   it('should handle multiple handlers', async () => {
-    const port = new Port('test', 'any', false);
+    const port = new Port({name: 'test', type:  'any', direction: 'input'});
     const handler1 = vi.fn();
     const handler2 = vi.fn();
 
@@ -172,7 +172,7 @@ describe('Port', () => {
   });
 
   it('should handle handler errors gracefully', async () => {
-    const port = new Port('test', 'any', false);
+    const port = new Port({name: 'test', type:  'any', direction: 'input'});
     const badHandler = vi.fn(async () => {
       throw new Error('handler error');
     });
@@ -193,7 +193,7 @@ describe('Port', () => {
   });
 
   it('should destroy and clear resources', () => {
-    const port = new Port('test', 'any', false);
+    const port = new Port({name: 'test', type:  'any', direction: 'input'});
     const handler = vi.fn();
 
     port.addDataHandler(handler);
@@ -208,14 +208,14 @@ describe('Port', () => {
   });
 
   it('should provide reasonable default schema', () => {
-    const port = new Port('test', 'any', false);
+    const port = new Port({name: 'test', type:  'any', direction: 'input'});
 
     expect(port.schema.get()).toEqual({ type: 'any' });
   });
 
   it('should handle async data propagation', async () => {
-    const upstream = new Port('up', 'number', true);
-    const downstream = new Port('down', 'number', false);
+    const upstream = new Port({name: 'up', type:  'number', direction: 'output'});
+    const downstream = new Port({name: 'down', type:  'number', direction: 'input'});
 
     const callOrder: string[] = [];
 

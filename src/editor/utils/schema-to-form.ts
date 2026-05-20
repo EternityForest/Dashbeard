@@ -111,7 +111,7 @@ function renderStringField(
 
   const fmt = schema.format || '';
   // Check if format has a registered datalist
-  const datalistId=  getFormatDatalist(fmt);
+  const datalistId = getFormatDatalist(fmt);
 
   // Regular text input
   return html`
@@ -143,7 +143,6 @@ function renderNumberField(
   schema: ConfigSchema,
   onChange: FormFieldChange
 ): TemplateResult {
-  const numValue = Number(value || 0);
   const min = typeof schema.minimum === 'number' ? schema.minimum : undefined;
   const max = typeof schema.maximum === 'number' ? schema.maximum : undefined;
 
@@ -159,13 +158,19 @@ function renderNumberField(
       <input
         type="number"
         style="width: 100%;"
-        .value="${String(numValue)}"
+        .value="${value || ''}"
         ?min="${min !== undefined}"
         .min="${min?.toString() || ''}"
         ?max="${max !== undefined}"
         .max="${max?.toString() || ''}"
-        @change="${(e: Event) =>
-          onChange(Number((e.target as HTMLInputElement).value))}"
+        @change="${(e: Event) => {
+          const v = (e.target as HTMLInputElement).value;
+          if (v.trim() === '') {
+            onChange(undefined);
+          } else {
+            onChange(Number((e.target as HTMLInputElement).value));
+          }
+        }}"
       />
     </label>
   `;

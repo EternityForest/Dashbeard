@@ -36,22 +36,6 @@ export interface ConfigSchema {
   [key: string]: unknown;
 }
 
-/**
- * Port direction and type information.
- */
-export interface PortSchema {
-  name: string;
-  direction: 'input' | 'output';
-  type: string;
-  description?: string;
-
-  min?: number;
-  max?: number;
-  hi?: number;
-  lo?: number;
-  step?: number;
-  unit?: string;
-}
 
 /**
  * Component type metadata and schema.

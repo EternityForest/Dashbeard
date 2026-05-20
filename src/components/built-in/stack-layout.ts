@@ -37,7 +37,7 @@ export class StackLayoutComponent extends PlainLayoutComponent {
           default: '6rem',
         },
       },
-    }
+    },
   };
 
   /**
@@ -58,10 +58,10 @@ export class StackLayoutComponent extends PlainLayoutComponent {
   public override onConfigUpdate(): void {
     const config = this.componentConfig;
     if (config) {
-      this.direction = (config.config.direction as 'row' | 'column') || 'row';
-      this.gap = (config.config.gap as string) ?? '8px';
+      this.direction = (config?.config?.direction as 'row' | 'column') || 'row';
+      this.gap = (config?.config?.gap as string) ?? '8px';
       this.componentGridHeight =
-        (config.config.componentGridHeight as string) ?? '6rem';
+        (config?.config?.componentGridHeight as string) ?? '6rem';
     }
     this.requestUpdate();
   }
@@ -71,15 +71,16 @@ export class StackLayoutComponent extends PlainLayoutComponent {
    */
   override render(): TemplateResult {
     return html`
-      <div
-        id="component-${this.id}"
-        class="stack-layout"
-        style="flex-direction: ${this.direction}; 
+      <div id="component-${this.id}">
+        <widget-children
+          class="stack-layout"
+          style="flex-direction: ${this.direction}; 
       gap: ${this.gap};
       flex-wrap:wrap;
       --component-grid-height: ${this.componentGridHeight};
       "
-      ></div>
+        ></widget-children>
+      </div>
     `;
   }
 

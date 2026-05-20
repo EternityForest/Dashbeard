@@ -1,8 +1,7 @@
 import type { ComponentTypeSchema } from '@/editor/types';
 import { html, TemplateResult } from 'lit';
-import { customElement} from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { DashboardComponent } from '../dashboard-component';
-
 
 @customElement('ds-plain-layout')
 export class PlainLayoutComponent extends DashboardComponent {
@@ -13,11 +12,9 @@ export class PlainLayoutComponent extends DashboardComponent {
     description: 'Container for arranging children with flexbox',
     configSchema: {
       type: 'object',
-      properties: {
-      },
-    }
+      properties: {},
+    },
   };
-
 
   /**
    * Synchronize component with node config.
@@ -29,23 +26,24 @@ export class PlainLayoutComponent extends DashboardComponent {
   }
 
   override updated(_changedProperties: Map<string, unknown>) {
-        this.renderRoot
+    const childrenTarget = this.renderRoot
       ?.querySelector(`#component-${this.id}`)
-      ?.replaceChildren();
+      ?.querySelector('widget-children');
+
+    if (!childrenTarget) {
+      throw new Error('Could not find widget-children');
+    }
+
+    childrenTarget?.replaceChildren();
 
     (this.componentConfig?.children || []).forEach((cnf) => {
       const child = this.allComponents.get(cnf.id);
       if (child) {
-        const existing = this.renderRoot
-          ?.querySelector(`#component-${this.id}`)
-          ?.querySelector(`#component-${cnf.id}`);
+        const existing = childrenTarget?.querySelector(`#component-${cnf.id}`);
         if (existing) {
           existing.remove();
         }
-
-        this.renderRoot
-          ?.querySelector(`#component-${this.id}`)
-          ?.appendChild(child);
+        childrenTarget?.appendChild(child);
       }
     });
   }
@@ -54,10 +52,9 @@ export class PlainLayoutComponent extends DashboardComponent {
    */
   override render(): TemplateResult {
     return html`
-      <div
-        id="component-${this.id}"
-        class="plain-layout"
-      ></div>
+      <div id="component-${this.id}" class="plain-layout">
+        <widget-children></widget-children>
+      </div>
     `;
   }
 

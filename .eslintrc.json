@@ -17,6 +17,7 @@
   },
   "rules": {
     "require-await": "off",
+    "@html-eslint/attrs-newline": "off",
     "@typescript-eslint/require-await": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",

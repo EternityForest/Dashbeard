@@ -4,10 +4,27 @@
  */
 
 import { Observer, Observable } from '../core/observable';
-import type {PortSchema } from "../editor/types";
 
 import { PortData } from './data-types';
 import type { Node } from './node';
+
+/**
+ * Port direction and type information.
+ */
+export interface PortSchema {
+  name: string;
+  direction: 'input' | 'output';
+  type: string;
+  description?: string;
+
+  min?: number;
+  max?: number;
+  hi?: number;
+  lo?: number;
+  step?: number;
+  unit?: string;
+}
+
 
 export enum SourceType {
   Upstream,
@@ -92,11 +109,18 @@ export class Port {
   public parentNode: Node | null = null;
 
   constructor(
-    name: string,
-    type: string,
-    isOutput: boolean,
-    schema: PortSchema = { type: 'any' }
+    schema: PortSchema
   ) {
+
+    const { type, name } = schema;
+
+    if(!(schema.direction === 'input' || schema.direction === 'output')){
+      throw new Error('direction must be input or output');
+    }
+    const isOutput: boolean = schema.direction === 'output';
+
+
+
     if (!(typeof type === 'string')) {
       throw new Error('type must be a string');
     }

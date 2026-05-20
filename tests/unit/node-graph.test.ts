@@ -8,8 +8,8 @@ class TestNode extends Node {
 
    constructor(id: string) {
     super(id);
-    this.addPort(new Port('input', 'any', false));
-    this.addPort(new Port('output', 'any', true));
+    this.addPort(new Port({name: 'input', type:  'any', direction: 'input'}));
+    this.addPort(new Port({name: 'output', type:  'any', direction: 'output'}));
   }
 
 }
@@ -18,8 +18,8 @@ class NumberNode extends Node {
   
   constructor(id: string) {
     super(id);
-    this.addPort(new Port('input', 'number', false));
-    this.addPort(new Port('result', 'number', true));
+    this.addPort(new Port({name: 'input', type:  'number', direction: 'input'}));
+    this.addPort(new Port({name: 'result', type:  'number', direction: 'output'}));
   }
 
 }

@@ -7,8 +7,8 @@ class TestNode extends Node {
 
   constructor(id: string) {
     super(id);
-    this.addPort(new Port('input', 'any', true));
-    this.addPort(new Port('output', 'any', false));
+    this.addPort(new Port({name: 'input', type:  'any', direction: 'output'}));
+    this.addPort(new Port({name: 'output', type:  'any', direction: 'input'}));
   }
 }
 

@@ -52,10 +52,11 @@ export class PanelLayoutComponent extends PlainLayoutComponent {
    */
   override render(): TemplateResult {
     return html`
-      <div
-        id="component-${this.id}"
-        class="panel-layout card border flex-col margin"
-      ></div>
+      <div id="component-${this.id}">
+        <widget-children
+          class="panel-layout card border flex-col margin"
+        ></widget-children>
+      </div>
     `;
   }
 

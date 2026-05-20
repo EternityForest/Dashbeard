@@ -1,11 +1,10 @@
 import type { ComponentTypeSchema } from '@/editor/types';
 import { html, TemplateResult } from 'lit';
-import { customElement} from 'lit/decorators.js';
-import { DashboardComponent } from '../dashboard-component';
-
+import { customElement } from 'lit/decorators.js';
+import { PlainLayoutComponent } from './plain-layout';
 
 @customElement('ds-form-layout')
-export class formLayoutComponent extends DashboardComponent {
+export class formLayoutComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'form-layout',
     displayName: 'form Layout',
@@ -13,11 +12,9 @@ export class formLayoutComponent extends DashboardComponent {
     description: 'Form container for input widgets',
     configSchema: {
       type: 'object',
-      properties: {
-      },
-    }
+      properties: {},
+    },
   };
-
 
   /**
    * Synchronize component with node config.
@@ -28,36 +25,14 @@ export class formLayoutComponent extends DashboardComponent {
     this.requestUpdate();
   }
 
-  override updated(_changedProperties: Map<string, unknown>) {
-        this.renderRoot
-      ?.querySelector(`#component-${this.id}`)
-      ?.replaceChildren();
-
-    (this.componentConfig?.children || []).forEach((cnf) => {
-      const child = this.allComponents.get(cnf.id);
-      if (child) {
-        const existing = this.renderRoot
-          ?.querySelector(`#component-${this.id}`)
-          ?.querySelector(`#component-${cnf.id}`);
-        if (existing) {
-          existing.remove();
-        }
-
-        this.renderRoot
-          ?.querySelector(`#component-${this.id}`)
-          ?.appendChild(child);
-      }
-    });
-  }
   /**
    * Render the flex layout container with child placeholders.
    */
   override render(): TemplateResult {
     return html`
-      <div
-        id="component-${this.id}"
-        class="stacked-form"
-      ></div>
+      <div id="component-${this.id}">
+        <widget-children class="stacked-form"></widget-children>
+      </div>
     `;
   }
 

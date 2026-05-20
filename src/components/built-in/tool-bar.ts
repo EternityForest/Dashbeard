@@ -1,11 +1,10 @@
 import type { ComponentTypeSchema } from '@/editor/types';
 import { html, TemplateResult } from 'lit';
-import { customElement} from 'lit/decorators.js';
-import { DashboardComponent } from '../dashboard-component';
-
+import { customElement } from 'lit/decorators.js';
+import { PlainLayoutComponent } from './plain-layout';
 
 @customElement('ds-tool-bar')
-export class ToolBarComponent extends DashboardComponent {
+export class ToolBarComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'tool-bar',
     displayName: 'Plain Layout',
@@ -13,51 +12,18 @@ export class ToolBarComponent extends DashboardComponent {
     description: 'Container for arranging children with flexbox',
     configSchema: {
       type: 'object',
-      properties: {
-      },
-    }
+      properties: {},
+    },
   };
 
-
-  /**
-   * Synchronize component with node config.
-   */
-  public override onConfigUpdate(): void {
-    // const config = this.componentConfig;
-
-    this.requestUpdate();
-  }
-
-  override updated(_changedProperties: Map<string, unknown>) {
-        this.renderRoot
-      ?.querySelector(`#component-${this.id}`)
-      ?.replaceChildren();
-
-    (this.componentConfig?.children || []).forEach((cnf) => {
-      const child = this.allComponents.get(cnf.id);
-      if (child) {
-        const existing = this.renderRoot
-          ?.querySelector(`#component-${this.id}`)
-          ?.querySelector(`#component-${cnf.id}`);
-        if (existing) {
-          existing.remove();
-        }
-
-        this.renderRoot
-          ?.querySelector(`#component-${this.id}`)
-          ?.appendChild(child);
-      }
-    });
-  }
   /**
    * Render the flex layout container with child placeholders.
    */
   override render(): TemplateResult {
     return html`
-      <div
-        id="component-${this.id}"
-        class="tool-bar"
-      ></div>
+      <div id="component-${this.id}" style="display: contents;">
+        <widget-children class="tool-bar"></widget-children>
+      </div>
     `;
   }
 

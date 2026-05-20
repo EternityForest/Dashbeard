@@ -168,8 +168,8 @@ export class FilterNode extends Node {
     // Create main input/output ports
     const ports = this.manifest.createPorts(upstreamType, config);
 
-    const inputPort = new Port('input', ports.input.type, false, ports.input);
-    const outputPort = new Port('output', ports.output.type, true, ports.output);
+    const inputPort = new Port(ports.input);
+    const outputPort = new Port(ports.output);
 
     this.addPort(inputPort);
     this.addPort(outputPort);
@@ -209,13 +209,13 @@ export class FilterNode extends Node {
     // Add static additional ports
     if (this.manifest.staticPorts?.inputs) {
       for (const portDecl of this.manifest.staticPorts.inputs) {
-        this.addPort(new Port(portDecl.name, portDecl.type, false));
+        this.addPort(new Port({name: portDecl.name, type:  portDecl.type, direction: 'input'}));
       }
     }
 
     if (this.manifest.staticPorts?.outputs) {
       for (const portDecl of this.manifest.staticPorts.outputs) {
-        this.addPort(new Port(portDecl.name, portDecl.type, true));
+        this.addPort(new Port({name: portDecl.name, type:  portDecl.type, direction: 'output'}));
       }
     }
   }

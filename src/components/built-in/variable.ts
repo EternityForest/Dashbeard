@@ -72,6 +72,8 @@ export class VariableComponent extends DashboardComponent {
     this.value = config.config.defaultValue ?? null;
 
     const ps: PortSchema = {
+      name: 'value',
+      direction: 'output',
       type: (config.config.type as string) || 'string',
     };
 
@@ -81,7 +83,7 @@ export class VariableComponent extends DashboardComponent {
     }
 
     this.node
-      .addPort(new Port('value', config.config.type as string, true, ps))
+      .addPort(new Port(ps))
       .addDataHandler(this.onPortData.bind(this));
     this.onConfigUpdate();
   }

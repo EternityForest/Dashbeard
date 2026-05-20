@@ -30,10 +30,11 @@ export class PanelBodyComponent extends PlainLayoutComponent {
    */
   override render(): TemplateResult {
     return html`
-      <div
-        id="component-${this.id}"
-        class="panel-body flex-col margin padding"
-      ></div>
+      <div id="component-${this.id}">
+        <widget-children
+          class="panel-body flex-col margin padding"
+        ></widget-children>
+      </div>
     `;
   }
 

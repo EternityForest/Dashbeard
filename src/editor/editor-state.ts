@@ -99,7 +99,21 @@ export class EditorState {
 
     const component = this.findComponent(componentId)!;
 
-    component.config[name] = value;
+
+    if(!component){
+      throw new Error('Component not found');
+    }
+
+    if(!component.config){
+      throw new Error('Component config not found');
+    }
+    
+    if(value== undefined){
+      delete component.config[name];
+    }
+    else{
+      component.config[name] = value;
+    }
 
 
     const componentInstance = this.editorComponent.renderer?.runtime.loadedComponents.get(componentId);
@@ -108,7 +122,20 @@ export class EditorState {
       throw new Error('Component not found');
     }
 
-    componentInstance.componentConfig.config[name] = value;
+    if(!componentInstance.componentConfig){
+      throw new Error('Component config not found');
+    }
+    if(!componentInstance.componentConfig.config){
+      throw new Error('Component config not found');
+    }
+
+    if(value== undefined){
+      delete componentInstance.componentConfig.config[name];
+    }
+    else{
+      componentInstance.componentConfig.config[name] = value;
+    }
+
 
     componentInstance.onConfigUpdate();
 

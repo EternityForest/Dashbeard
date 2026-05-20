@@ -200,7 +200,7 @@ export class DashboardEditor extends LitElement {
       <div class="editor-layout ${this.showSidebar ? '' : 'sidebar-hidden'}">
         <div class="editor-sidebar" hidden=${!this.showSidebar}>
           <div class="tool-bar nogrow">
-            <button @click="${this.saveBoard.bind(this)}" ?disabled="${!dirty}">
+            <button @click="${this.saveBoard.bind(this)}">
               Save
             </button>
           </div>

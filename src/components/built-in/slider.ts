@@ -27,22 +27,20 @@ export class SliderComponent extends DashboardComponent {
         min: {
           type: 'number',
           description: 'Minimum value',
-          default: 0,
         },
         max: {
           type: 'number',
           description: 'Maximum value',
-          default: 100,
         },
         defaultValue: {
           type: 'number',
           description: 'Current value',
-          default: 50,
         },
         step: {
           type: 'number',
           description: 'Step size',
-          default: 1,
+          minimum: 0.0000001,
+          step: 0.0000001,
         },
         label: {
           type: 'string',
@@ -56,23 +54,26 @@ export class SliderComponent extends DashboardComponent {
   /**
    * Current slider value.
    */
-  @property({ type: Number }) value: number = 50;
+  @property({ type: "number" }) value=0;
+
+
+  @property({ type: String }) unit= '';
+
+  @property({ type: String }) displayUnit= '';
 
   /**
    * Minimum value.
    */
-  @property({ type: Number }) min: number = 0;
+  @property({ type: String }) min= '';
 
   /**
    * Maximum value.
    */
-  @property({ type: Number }) max: number = 100;
-
+  @property({ type: String }) max= '';
   /**
    * Step size.
    */
-  @property({ type: Number }) step: number = 1;
-
+  @property({ type: String }) step= '';
   /**
    * Display label.
    */
@@ -82,12 +83,12 @@ export class SliderComponent extends DashboardComponent {
     super(config);
 
     const port = this.node.addPort(
-      new Port('value', 'number', false, { type: 'number' })
+      new Port({name: 'value',  type: 'number', direction: 'input' })
     );
 
     port.addDataHandler(this.onPortData.bind(this));
 
-    this.value = (config.config.defaultValue as number) ?? 50;
+    this.value = (parseFloat(config?.config?.defaultValue as string || '')) ?? 50;
 
     this.onConfigUpdate();
 
@@ -110,7 +111,6 @@ export class SliderComponent extends DashboardComponent {
    * Synchronize component with node config.
    */
   public override onConfigUpdate(): void {
-    const config = this.componentConfig;
     const specificConfig: Record<string, unknown> =
       this.componentConfig.config || {};
 
@@ -119,12 +119,48 @@ export class SliderComponent extends DashboardComponent {
       .getUpstreamPort()
       ?.schema.get();
 
+    this.unit = ''
+
     if (sourceportschema) {
-      this.min = (sourceportschema.min as number) ?? 0;
-      this.max = (sourceportschema.max as number) ?? 100;
-      this.step = (sourceportschema.step as number) ?? 1;
-      this.label = (specificConfig.label as string) || 'Slider';
+
+      if(sourceportschema.min !== undefined) {
+        this.min = sourceportschema.min.toString()
+      }
+
+      if(sourceportschema.max !== undefined) {
+        this.max = sourceportschema.max.toString()
+      }
+
+      if(sourceportschema.step !== undefined) {
+        this.step = sourceportschema.step.toString()
+      }
+
+      if(sourceportschema.unit !== undefined) {
+        this.unit = sourceportschema.unit
+      }
+    }      
+
+    if(specificConfig.min !== undefined) {
+      this.min = specificConfig.min?.toString() || '0'
     }
+
+    if(specificConfig.max !== undefined) {
+      this.max = specificConfig.max?.toString() || '100'
+    }
+
+    if(specificConfig.step !== undefined) {
+      this.step = specificConfig.step?.toString() || ''
+    }
+    
+
+    if(this.step === '') {
+      this.step = '0.01'
+    }
+    
+
+    this.displayUnit = this.unit
+    this.label = (specificConfig.label as string) || 'Slider';
+
     this.requestUpdate();
   }
 
@@ -143,7 +179,8 @@ export class SliderComponent extends DashboardComponent {
    * Calculate percentage for visual fill effect.
    */
   private getPercentage(): number {
-    return ((this.value - this.min) / (this.max - this.min)) * 100;
+    return ((this.value - parseFloat(this.min) /
+     (parseFloat(this.max)- parseFloat(this.min)))) * 100;
   }
 
   /**
@@ -153,19 +190,21 @@ export class SliderComponent extends DashboardComponent {
     const percentage = this.getPercentage();
 
     return html`
-      <label
-        >${this.label} (${this.value})
-          <input
-            class="max-w-12-rem"
-            type="range"
-            .value="${String(this.value)}"
-            .min="${String(this.min)}"
-            .max="${String(this.max)}"
-            .step="${String(this.step)}"
-            @input="${this.handleInput.bind(this)}"
-            style="--percentage: ${percentage}%"
-          />
+    <div class="small-dashboard-widget-container">
+      <label class="noselect w-full"
+        >${this.label} (${this.value}${this.displayUnit})
+        <input
+          class="w-full"
+          type="range"
+          .value="${String(this.value)}"
+          .min="${String(this.min)}"
+          .max="${String(this.max)}"
+          .step="${String(this.step)}"
+          @input="${this.handleInput.bind(this)}"
+          style="--percentage: ${percentage}%; margin-top: 12px;"
+        />
       </label>
+    </div>
     `;
   }
 }
