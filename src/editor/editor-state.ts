@@ -310,41 +310,72 @@ export class EditorState {
    * Updates config, calls onConfigUpdate() on both parents.
    *
    * @param componentId ID of component to move
-   * @param newParentId ID of new parent component
+   * @param targetId ID of target component (new parent or sibling)
+   * @param position Position relative to target: 'append' (into target), 'before'/'after' (as sibling)
    * @throws Error if validation fails
    */
-  public moveComponent(componentId: string, newParentId: string): void {
+  public moveComponent(
+    componentId: string,
+    targetId: string,
+    position: MovePosition = 'append'
+  ): void {
     // Validation
     if (componentId === 'root') {
       throw new Error('Cannot move root component');
     }
 
-    if (componentId === newParentId) {
-      return; // No-op: moving to current parent
+    if (componentId === targetId) {
+      return; // No-op: moving to self
     }
 
-    if (!this.isLayoutComponent(newParentId)) {
-      throw new Error(
-        `Cannot move component: "${newParentId}" is not a layout component`
-      );
+    const targetComponent = this.findComponent(targetId);
+    if (!targetComponent) {
+      throw new Error(`Target component "${targetId}" not found`);
     }
 
-    if (this.isDescendantOf(componentId, newParentId)) {
-      throw new Error(
-        'Cannot move component: would create circular reference'
-      );
+    // Determine the new parent based on position
+    let newParent: Component | null;
+    let insertIndex: number;
+
+    if (position === 'append') {
+      // Moving INTO a layout component
+      if (!this.isLayoutComponent(targetId)) {
+        throw new Error(
+          `Cannot move component into "${targetId}": not a layout component`
+        );
+      }
+      if (this.isDescendantOf(componentId, targetId)) {
+        throw new Error(
+          'Cannot move component: would create circular reference'
+        );
+      }
+      newParent = targetComponent;
+      insertIndex = -1; // Append at end
+    } else {
+      // Moving as sibling (before/after target)
+      newParent = this.findParent(targetId);
+      if (!newParent) {
+        throw new Error('Cannot reorder: target has no parent');
+      }
+      // Find index of target in parent's children
+      insertIndex = newParent.children?.findIndex((c) => c.id === targetId) ?? -1;
+      if (insertIndex === -1) {
+        throw new Error('Target not found in parent children');
+      }
+      // Adjust index for 'after' position
+      if (position === 'after') {
+        insertIndex += 1;
+      }
     }
 
-    // Find component and parents
+    // Find component and old parent
     const component = this.findComponent(componentId);
     const oldParent = this.findParent(componentId);
-    const newParent = this.findComponent(newParentId);
 
-    if (!component || !newParent) {
-      throw new Error('Component or parent not found');
+    if (!component) {
+      throw new Error(`Component "${componentId}" not found`);
     }
 
-    // If component has no parent, it's the root (already caught above)
     if (!oldParent) {
       throw new Error('Cannot move component without parent');
     }
@@ -357,11 +388,18 @@ export class EditorState {
       }
     }
 
-    // Add to new parent
+    // Add to new parent at the specified position
     if (!newParent.children) {
       newParent.children = [];
     }
-    newParent.children.push(component);
+
+    if (insertIndex === -1 || insertIndex >= newParent.children.length) {
+      // Append
+      newParent.children.push(component);
+    } else {
+      // Insert at specific position
+      newParent.children.splice(insertIndex, 0, component);
+    }
 
     // Get runtime instances and trigger updates
     const oldParentInstance = this.editorComponent.renderer?.runtime.loadedComponents.get(
@@ -375,7 +413,7 @@ export class EditorState {
       oldParentInstance.onConfigUpdate();
     }
 
-    if (newParentInstance) {
+    if (newParentInstance && newParent.id !== oldParent.id) {
       newParentInstance.onConfigUpdate();
     }
 

@@ -93,7 +93,6 @@ export class TextboxComponent extends DashboardComponent {
             .value="${this.value}"
             .placeholder="${this.placeholder}"
             @change="${this.handleInput.bind(this)}"
-            style="margin-top: 6px;"
           />
         </label>
     `;

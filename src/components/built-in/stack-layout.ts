@@ -29,13 +29,8 @@ export class StackLayoutComponent extends PlainLayoutComponent {
         gap: {
           type: 'string',
           description: 'Gap between components',
-          default: '1rem',
-        },
-        componentGridHeight: {
-          type: 'string',
-          description: 'Height of the component grid',
-          default: '6rem',
-        },
+          default: 'var(--gap)',
+        }
       },
     },
   };
@@ -44,8 +39,6 @@ export class StackLayoutComponent extends PlainLayoutComponent {
    * Flex direction: 'row' or 'column'.
    */
   @property() direction: 'row' | 'column' = 'column';
-
-  @property() componentGridHeight: string = '6rem';
 
   /**
    * Gap between children in pixels.
@@ -60,8 +53,6 @@ export class StackLayoutComponent extends PlainLayoutComponent {
     if (config) {
       this.direction = (config?.config?.direction as 'row' | 'column') || 'row';
       this.gap = (config?.config?.gap as string) ?? '8px';
-      this.componentGridHeight =
-        (config?.config?.componentGridHeight as string) ?? '6rem';
     }
     this.requestUpdate();
   }
@@ -77,7 +68,6 @@ export class StackLayoutComponent extends PlainLayoutComponent {
           style="flex-direction: ${this.direction}; 
       gap: ${this.gap};
       flex-wrap:wrap;
-      --component-grid-height: ${this.componentGridHeight};
       "
         ></widget-children>
       </div>

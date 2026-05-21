@@ -47,6 +47,12 @@ export class ComponentTree extends LitElement {
   @property()
   dragOverValid: boolean = false;
 
+  /**
+   * Current drag position: 'append' (into container) or 'sibling' (reorder).
+   */
+  @property()
+  dragOverPosition: 'append' | 'sibling' = 'append';
+
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     return this; // Renders to the element's light DOM
   }
@@ -134,12 +140,54 @@ export class ComponentTree extends LitElement {
 
     event.preventDefault();
 
-    // Validate drop target is a layout component
-    const isValid =
-      this.editorState?.isLayoutComponent(targetComponentId) ?? false;
+    // Determine if dropping on top half (reorder as sibling) or bottom half (into container)
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    const isAboveMid = event.clientY < midY;
+
+    // Check if target is a layout component
+    const isLayout = this.editorState?.isLayoutComponent(targetComponentId) ?? false;
+
+    // Position logic:
+    // - If above midpoint OR target is not a layout → treat as sibling (reorder)
+    // - If below midpoint AND target is a layout → move into container
+    let isValid = false;
+    let position: 'append' | 'sibling' = 'sibling';
+
+    if (isAboveMid || !isLayout) {
+      // Reorder as sibling
+      isValid = true;
+      position = 'sibling';
+    } else {
+      // Move into container
+      isValid = true;
+      position = 'append';
+    }
+
+    // Prevent dropping onto own descendants
+    if (this.draggedComponentId && this.editorState) {
+      const targetComponent = this.editorState.findComponent(targetComponentId);
+      if (targetComponent && this.editorState.findComponent(this.draggedComponentId)) {
+        // Check if dragged is ancestor of target
+        const checkDescendant = (parent: Component, childId: string): boolean => {
+          if (!parent.children) return false;
+          for (const child of parent.children) {
+            if (child.id === childId) return true;
+            if (checkDescendant(child, childId)) return true;
+          }
+          return false;
+        };
+        const draggedComp = this.editorState.findComponent(this.draggedComponentId);
+        if (draggedComp && checkDescendant(draggedComp, targetComponentId)) {
+          isValid = false;
+        }
+      }
+    }
 
     this.dragOverComponentId = targetComponentId;
     this.dragOverValid = isValid;
+    this.dragOverPosition = position;
 
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = isValid ? 'move' : 'none';
@@ -154,6 +202,7 @@ export class ComponentTree extends LitElement {
   private handleDragLeave(): void {
     this.dragOverComponentId = null;
     this.dragOverValid = false;
+    this.dragOverPosition = 'append';
   }
 
   /**
@@ -167,10 +216,17 @@ export class ComponentTree extends LitElement {
       return;
     }
 
+    // Determine actual position to pass
+    const position: 'append' | 'before' | 'after' =
+      this.dragOverPosition === 'append'
+        ? 'append'
+        : 'before'; // Default to before for reordering
+
     try {
       this.editorState?.moveComponent(
         this.draggedComponentId,
-        targetComponentId
+        targetComponentId,
+        position
       );
     } catch (err) {
       alert(
@@ -188,6 +244,7 @@ export class ComponentTree extends LitElement {
     this.draggedComponentId = null;
     this.dragOverComponentId = null;
     this.dragOverValid = false;
+    this.dragOverPosition = 'append';
   }
 
   /**

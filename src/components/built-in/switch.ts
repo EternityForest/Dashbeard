@@ -84,7 +84,6 @@ export class SwitchComponent extends DashboardComponent {
 
   override render(): TemplateResult {
     return html`
-      <div class="display-contents">
         <label class="noselect w-full switch-label">
           <input
             type="checkbox"
@@ -94,7 +93,6 @@ export class SwitchComponent extends DashboardComponent {
           />
           <span>${this.label}</span>
         </label>
-      </div>
     `;
   }
 }

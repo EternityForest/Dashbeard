@@ -189,17 +189,17 @@ export class SliderComponent extends DashboardComponent {
     const percentage = this.getPercentage();
 
     return html`
-      <label class="noselect w-full"
+      <label class="noselect"
         >${this.label} (${this.value}${this.displayUnit})
         <input
-          class="max-w-12rem"
+          class="max-w-12rem display-cont"
           type="range"
           .value="${String(this.value)}"
           .min="${String(this.min)}"
           .max="${String(this.max)}"
           .step="${String(this.step)}"
           @input="${this.handleInput.bind(this)}"
-          style="--percentage: ${percentage}%; margin-top: 12px;"
+          style="--percentage: ${percentage}%;max-width: 12rem"
         />
       </label>
     `;

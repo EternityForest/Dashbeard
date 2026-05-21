@@ -34,7 +34,18 @@ export class PanelLayoutComponent extends PlainLayoutComponent {
     description: 'Container for arranging children with flexbox',
     configSchema: {
       type: 'object',
-      properties: {},
+      properties: {
+        "expand":{
+          "type": "number",
+          "default": 1
+        },
+
+        "max-width":{
+          "type": "string",
+          "default": "36rem"
+        }
+
+      },
     },
   };
 
@@ -52,7 +63,10 @@ export class PanelLayoutComponent extends PlainLayoutComponent {
    */
   override render(): TemplateResult {
     return html`
-      <div id="component-${this.id}">
+      <div id="component-${this.id}"
+      style="max-width: ${this?.componentConfig?.config!['max-width'] || "36rem"};";
+      flex-grow: ${this?.componentConfig?.config!['expand'] || 1};
+      >
         <widget-children
           class="panel-layout card border flex-col margin"
         ></widget-children>
