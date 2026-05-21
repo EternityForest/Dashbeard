@@ -82,10 +82,9 @@ ds-variable{
     }
 }
 
-ds-slider{
+ds-slider, ds-heading, ds-switch, ds-textbox, ds-button{
   display: contents;
 }
-
 
 .panel-layout{
   padding: 0px;
@@ -97,11 +96,3 @@ ds-slider{
   padding: 0px;
 }
 
-ds-heading{
-  display: contents;
-  
-
-  h2, h3, h4,h5, h6{
-    height: var(--control-height);
-  }
-}

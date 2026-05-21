@@ -7,6 +7,12 @@ import { Observable } from '../core/observable';
 import type { BoardDefinition, IBoardBackend} from './types';
 import type { DashboardEditor } from './components/dashboard-editor';
 import type { Component } from './types';
+
+/**
+ * Position for inserting a component relative to a target.
+ */
+export type MovePosition = 'append' | 'before' | 'after';
+
 /**
  * Centralized editor state with Observable-based reactivity.
  * All editor components subscribe to these observables for
