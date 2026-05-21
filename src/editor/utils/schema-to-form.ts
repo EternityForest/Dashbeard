@@ -146,6 +146,7 @@ function renderNumberField(
   const min = typeof schema.minimum === 'number' ? schema.minimum : undefined;
   const max = typeof schema.maximum === 'number' ? schema.maximum : undefined;
 
+  const step = schema?.step?.toString() || 'any'
   return html`
     <label
       style="display: block; margin-bottom: 12px;
@@ -158,6 +159,7 @@ function renderNumberField(
       <input
         type="number"
         style="width: 100%;"
+        step="${step}"
         .value="${value || ''}"
         ?min="${min !== undefined}"
         .min="${min?.toString() || ''}"

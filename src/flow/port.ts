@@ -109,7 +109,8 @@ export class Port {
   public parentNode: Node | null = null;
 
   constructor(
-    schema: PortSchema
+    schema: PortSchema,
+    initialData: PortData | null = null
   ) {
 
     const { type, name } = schema;
@@ -134,6 +135,7 @@ export class Port {
     this.type = type;
     this.isOutput = isOutput;
     schema.type = type;
+    this.lastData = initialData;
     this.schema.set(schema);
   }
 
@@ -165,7 +167,23 @@ export class Port {
    * Get the last data received at this port.
    */
   getLastData(): PortData | null {
+
+    if(!this.lastData){
+      if(this.isOutput){
+        return null;
+      }
+      else{
+        if(this.upstreamConnection.get()){
+          return this.upstreamConnection.get()!.getLastData();
+        }
+        else{
+          return null;
+        }
+      }
+    }
     return this.lastData;
+
+
   }
 
   /**

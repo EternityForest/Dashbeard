@@ -22,6 +22,7 @@ export type {
   PortSchema,
   ComponentTypeSchema,
   IBoardBackend,
+  SystemTheme,
   ComponentRegistryEntry,
   ValidationResult,
 } from './types';

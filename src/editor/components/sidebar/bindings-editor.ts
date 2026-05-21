@@ -90,7 +90,7 @@ export class BindingsEditor extends LitElement {
     if (!this.editorState) {
       throw new Error('Bindings editor requires EditorState');
     }
-    
+
     this.editorState.nodeGraphChanged.subscribe(() => {
       this.updateSelection();
     });
@@ -99,8 +99,6 @@ export class BindingsEditor extends LitElement {
     this.editorState.selectedComponentId.subscribe(() => {
       this.updateSelection();
     });
-
-    
 
     this.editorState.board.subscribe(() => {
       this.updateBindings();
@@ -543,9 +541,7 @@ export class BindingsEditor extends LitElement {
 
     // Check for duplicate
     if (
-      board.bindings.some(
-        (b) => b.fromPort === fromPort && b.toPort === toPort
-      )
+      board.bindings.some((b) => b.fromPort === fromPort && b.toPort === toPort)
     ) {
       alert('This binding already exists');
       return;
@@ -564,14 +560,12 @@ export class BindingsEditor extends LitElement {
       try {
         // For now, create binding without filters in runtime
         // Filter wiring will happen when the full binding is created
-        await runtime.getGraph().loadBinding(newBinding);        
+        await runtime.getGraph().loadBinding(newBinding);
       } catch (err) {
         alert(`Failed to create binding: ${err.toString()}`);
         return;
       }
     }
-
-
 
     board.bindings.push(newBinding);
     this.editorState.board.set(board);
@@ -587,10 +581,10 @@ export class BindingsEditor extends LitElement {
         <div class="panel-content">
           ${this.selectedComponent
             ? html`<div class="hint">
-                Showing bindings for <strong>${this.selectedComponent.id}</strong>
+                Showing bindings for
+                <strong>${this.selectedComponent.id}</strong>
               </div>`
             : html`<div class="hint">Showing all bindings</div>`}
-
           ${this.relevantBindings.length > 0
             ? html`
                 <div class="bindings-list">
@@ -621,18 +615,7 @@ export class BindingsEditor extends LitElement {
 
     return html`
       <div class="binding-item">
-        <div class="binding-flow">
-          <div class="port-ref">
-            <span class="comp-id">${upstreamCompId}</span>
-            <span class="port-name">.${upstreamPort}</span>
-          </div>
-          <div class="arrow">→</div>
-          <div class="port-ref">
-            <span class="comp-id">${downstreamCompId}</span>
-            <span class="port-name">.${downstreamPort}</span>
-          </div>
-        </div>
-        <div style="display: flex; gap: 4px;">
+        <div style="display: flex; gap: 4px; width: 100%;">
           <button
             class="edit-binding"
             @click="${() => this.startEditingBinding(binding)}"
@@ -650,6 +633,18 @@ export class BindingsEditor extends LitElement {
             ✕
           </button>
         </div>
+
+        <div class="binding-flow">
+          <div class="port-ref">
+            <span class="comp-id">${upstreamCompId}</span>
+            <span class="port-name">.${upstreamPort}</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="port-ref">
+            <span class="comp-id">${downstreamCompId}</span>
+            <span class="port-name">.${downstreamPort}</span>
+          </div>
+        </div>
       </div>
 
       ${isEditing ? this.renderBindingEditor(binding) : ''}
@@ -663,18 +658,35 @@ export class BindingsEditor extends LitElement {
     const availableFilters = this.getAvailableFilters();
 
     return html`
-      <div style="margin-top: 8px; padding: 8px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 3px;">
-        <div style="font-size: 11px; font-weight: 600; margin-bottom: 8px;">Filters</div>
+      <div
+        style="margin-top: 8px; padding: 8px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 3px;"
+      >
+        <div style="font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+          Filters
+        </div>
 
         ${this.editingBindingState.filters.length > 0
           ? html`
-              <div style="margin-bottom: 8px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 2px;">
+              <div
+                style="margin-bottom: 8px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 2px;"
+              >
                 ${this.editingBindingState.filters.map(
                   (filter, index) => html`
-                    <div style="margin-bottom: ${index < this.editingBindingState.filters.length - 1 ? '8px' : '0'}; padding-bottom: 8px; border-bottom: ${index < this.editingBindingState.filters.length - 1 ? '1px solid #f0f0f0' : 'none'};">
-                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <div
+                      style="margin-bottom: ${index <
+                      this.editingBindingState.filters.length - 1
+                        ? '8px'
+                        : '0'}; padding-bottom: 8px; border-bottom: ${index <
+                      this.editingBindingState.filters.length - 1
+                        ? '1px solid #f0f0f0'
+                        : 'none'};"
+                    >
+                      <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;"
+                      >
                         <span style="font-weight: 500; font-size: 11px;">
-                          ${filterRegistry.getManifest(filter.type)?.displayName || filter.type}
+                          ${filterRegistry.getManifest(filter.type)
+                            ?.displayName || filter.type}
                         </span>
                         <div style="display: flex; gap: 2px;">
                           <button
@@ -687,19 +699,24 @@ export class BindingsEditor extends LitElement {
                           <button
                             type="button"
                             style="padding: 1px 4px; font-size: 10px; background: #fee; border: 1px solid #fcc; color: #c33; cursor: pointer; border-radius: 2px;"
-                            @click="${() => this.removeFilterFromEditingBinding(index)}"
+                            @click="${() =>
+                              this.removeFilterFromEditingBinding(index)}"
                           >
                             Remove
                           </button>
                         </div>
                       </div>
-                      ${this.editingFilterIndex === index ? this.renderFilterConfigEditor(filter, index) : ''}
+                      ${this.editingFilterIndex === index
+                        ? this.renderFilterConfigEditor(filter, index)
+                        : ''}
                     </div>
                   `
                 )}
               </div>
             `
-          : html`<div style="font-size: 10px; color: #999; margin-bottom: 8px;">No filters applied</div>`}
+          : html`<div style="font-size: 10px; color: #999; margin-bottom: 8px;">
+              No filters applied
+            </div>`}
 
         <select
           @change="${(e: Event) => {
@@ -713,7 +730,10 @@ export class BindingsEditor extends LitElement {
         >
           <option value="">Add filter...</option>
           ${availableFilters.map(
-            (filter) => html`<option value="${filter.type}">${filter.displayName}</option>`
+            (filter) =>
+              html`<option value="${filter.type}">
+                ${filter.displayName}
+              </option>`
           )}
         </select>
 
@@ -746,13 +766,17 @@ export class BindingsEditor extends LitElement {
   ): TemplateResult {
     const manifest = filterRegistry.getManifest(filter.type);
     if (!manifest || !manifest.configSchema.properties) {
-      return html`<div style="font-size: 10px; color: #999; margin-top: 4px;">No properties to configure</div>`;
+      return html`<div style="font-size: 10px; color: #999; margin-top: 4px;">
+        No properties to configure
+      </div>`;
     }
 
     const properties = manifest.configSchema.properties;
 
     return html`
-      <div style="margin-top: 4px; padding: 6px; background: #f5f5f5; border-radius: 2px; border-left: 2px solid #90caf9;">
+      <div
+        style="margin-top: 4px; padding: 6px; background: #f5f5f5; border-radius: 2px; border-left: 2px solid #90caf9;"
+      >
         ${Object.entries(properties).map(([key, propSchema]) => {
           const propValue = filter.config[key];
           const prop = propSchema as any;
@@ -760,7 +784,9 @@ export class BindingsEditor extends LitElement {
           if (prop.type === 'string') {
             return html`
               <div style="margin-bottom: 4px;">
-                <label style="display: block; font-size: 9px; color: #666; margin-bottom: 2px; font-weight: 500;">
+                <label
+                  style="display: block; font-size: 9px; color: #666; margin-bottom: 2px; font-weight: 500;"
+                >
                   ${prop.description || key}
                 </label>
                 <input
@@ -768,14 +794,20 @@ export class BindingsEditor extends LitElement {
                   style="width: 100%; padding: 2px 4px; font-size: 10px; border: 1px solid #bbb; border-radius: 2px; box-sizing: border-box;"
                   .value="${String(propValue || '')}"
                   @change="${(e: Event) =>
-                    this.updateFilterConfig(filterIndex, key, (e.target as HTMLInputElement).value)}"
+                    this.updateFilterConfig(
+                      filterIndex,
+                      key,
+                      (e.target as HTMLInputElement).value
+                    )}"
                 />
               </div>
             `;
           } else if (prop.type === 'number') {
             return html`
               <div style="margin-bottom: 4px;">
-                <label style="display: block; font-size: 9px; color: #666; margin-bottom: 2px; font-weight: 500;">
+                <label
+                  style="display: block; font-size: 9px; color: #666; margin-bottom: 2px; font-weight: 500;"
+                >
                   ${prop.description || key}
                 </label>
                 <input
@@ -783,19 +815,29 @@ export class BindingsEditor extends LitElement {
                   style="width: 100%; padding: 2px 4px; font-size: 10px; border: 1px solid #bbb; border-radius: 2px; box-sizing: border-box;"
                   .value="${String(propValue || 0)}"
                   @change="${(e: Event) =>
-                    this.updateFilterConfig(filterIndex, key, Number((e.target as HTMLInputElement).value))}"
+                    this.updateFilterConfig(
+                      filterIndex,
+                      key,
+                      Number((e.target as HTMLInputElement).value)
+                    )}"
                 />
               </div>
             `;
           } else if (prop.type === 'boolean') {
             return html`
-              <label style="display: flex; align-items: center; font-size: 10px; color: #666; margin-bottom: 4px; cursor: pointer;">
+              <label
+                style="display: flex; align-items: center; font-size: 10px; color: #666; margin-bottom: 4px; cursor: pointer;"
+              >
                 <input
                   type="checkbox"
                   style="margin-right: 4px;"
                   .checked="${Boolean(propValue)}"
                   @change="${(e: Event) =>
-                    this.updateFilterConfig(filterIndex, key, (e.target as HTMLInputElement).checked)}"
+                    this.updateFilterConfig(
+                      filterIndex,
+                      key,
+                      (e.target as HTMLInputElement).checked
+                    )}"
                 />
                 <span>${prop.description || key}</span>
               </label>
@@ -850,8 +892,7 @@ export class BindingsEditor extends LitElement {
       );
     } else {
       // Show only compatible input ports
-      const [fromCompId, fromPort] =
-        this.formState.fromPort.split('.');
+      const [fromCompId, fromPort] = this.formState.fromPort.split('.');
       return this.getCompatibleInputPorts(fromCompId, fromPort);
     }
   }
@@ -875,8 +916,7 @@ export class BindingsEditor extends LitElement {
       );
     } else {
       // Show only compatible output ports
-      const [toCompId, toPort] =
-        this.formState.toPort.split('.');
+      const [toCompId, toPort] = this.formState.toPort.split('.');
       return this.getCompatibleOutputPorts(toCompId, toPort);
     }
   }
@@ -904,7 +944,7 @@ export class BindingsEditor extends LitElement {
         }}"
       >
         <div class="form-group">
-          <label>Source Port</label>
+          <label>Controlling Source Port</label>
           <input
             type="text"
             name="upstream"
@@ -912,9 +952,7 @@ export class BindingsEditor extends LitElement {
             list="upstream-ports"
             .value="${this.formState.fromPort}"
             @input="${(e: Event) =>
-              this.handleFromPortChange(
-                (e.target as HTMLInputElement).value
-              )}"
+              this.handleFromPortChange((e.target as HTMLInputElement).value)}"
           />
           <datalist id="upstream-ports">
             ${fromPortOptions.map(
@@ -933,7 +971,7 @@ export class BindingsEditor extends LitElement {
         </div>
 
         <div class="form-group">
-          <label>Target Port(downstream)</label>
+          <label>Downstream Target Port(downstream)</label>
           <input
             type="text"
             name="downstream"
@@ -941,9 +979,7 @@ export class BindingsEditor extends LitElement {
             list="downstream-ports"
             .value="${this.formState.toPort}"
             @input="${(e: Event) =>
-              this.handleToPortChange(
-                (e.target as HTMLInputElement).value
-              )}"
+              this.handleToPortChange((e.target as HTMLInputElement).value)}"
           />
           <datalist id="downstream-ports">
             ${toPortOptions.map(
@@ -974,9 +1010,13 @@ export class BindingsEditor extends LitElement {
 
         ${!this.formState.fromPort || !this.formState.toPort
           ? html`
-              <div class="warning-hint" style="margin-top: 8px; font-size: 11px; color: #f57c00; background: #fff3e0; padding: 6px 8px; border-radius: 3px; border-left: 3px solid #ff9800;">
+              <div
+                class="warning-hint"
+                style="margin-top: 8px; font-size: 11px; color: #f57c00; background: #fff3e0; padding: 6px 8px; border-radius: 3px; border-left: 3px solid #ff9800;"
+              >
                 ${!this.formState.fromPort && !this.formState.toPort
-                  ? html`Select both a source port and target port to create a binding.`
+                  ? html`Select both a source port and target port to create a
+                    binding.`
                   : !this.formState.fromPort
                     ? html`Select a source (output) port to choose from.`
                     : html`Select a target (input) port to bind to.`}
@@ -994,17 +1034,30 @@ export class BindingsEditor extends LitElement {
     const availableFilters = this.getAvailableFilters();
 
     return html`
-      <div class="form-group" style="border-top: 1px solid #ddd; padding-top: 12px; margin-top: 12px;">
-        <label style="margin-bottom: 8px; display: block;">Filters (Optional)</label>
+      <div
+        class="form-group"
+        style="border-top: 1px solid #ddd; padding-top: 12px; margin-top: 12px;"
+      >
+        <label style="margin-bottom: 8px; display: block;"
+          >Filters (Optional)</label
+        >
 
         ${this.formState.filters.length > 0
           ? html`
-              <div style="margin-bottom: 8px; padding: 8px; background: #f5f5f5; border-radius: 3px;">
+              <div
+                style="margin-bottom: 8px; padding: 8px; background: #f5f5f5; border-radius: 3px;"
+              >
                 ${this.formState.filters.map(
                   (filter, index) => html`
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${index < this.formState.filters.length - 1 ? '8px' : '0'};">
+                    <div
+                      style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${index <
+                      this.formState.filters.length - 1
+                        ? '8px'
+                        : '0'};"
+                    >
                       <span style="font-size: 12px; font-weight: 600;">
-                        ${filterRegistry.getManifest(filter.type)?.displayName || filter.type}
+                        ${filterRegistry.getManifest(filter.type)
+                          ?.displayName || filter.type}
                       </span>
                       <button
                         type="button"
@@ -1032,7 +1085,10 @@ export class BindingsEditor extends LitElement {
         >
           <option value="">Add filter...</option>
           ${availableFilters.map(
-            (filter) => html`<option value="${filter.type}">${filter.displayName}</option>`
+            (filter) =>
+              html`<option value="${filter.type}">
+                ${filter.displayName}
+              </option>`
           )}
         </select>
       </div>

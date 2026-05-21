@@ -83,7 +83,11 @@ export class VariableComponent extends DashboardComponent {
     }
 
     this.node
-      .addPort(new Port(ps))
+      .addPort(new Port(ps, {
+        value: this.value,
+        timestamp: Date.now(),
+        annotation: {}
+      }))
       .addDataHandler(this.onPortData.bind(this));
     this.onConfigUpdate();
   }

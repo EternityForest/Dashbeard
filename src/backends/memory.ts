@@ -2,6 +2,7 @@ import type {
   BoardDefinition,
   FileMetadata,
   IBoardBackend,
+  SystemTheme,
 } from '../editor/types';
 
 // Sample board for testing
@@ -89,5 +90,10 @@ export class MemoryBackend implements IBoardBackend {
       board.id,
       JSON.parse(JSON.stringify(board)) as unknown as BoardDefinition
     );
+  }
+
+  async getSystemThemes(): Promise<SystemTheme[]> {
+    // Return empty list - override in subclasses to provide system themes
+    return [];
   }
 }

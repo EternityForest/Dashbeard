@@ -6,6 +6,9 @@
 import type { DashboardComponentConstructor } from '../dashboard-component';
 import { VariableComponent } from './variable';
 import { SliderComponent } from './slider';
+import { SwitchComponent } from './switch';
+import { ButtonComponent } from './button';
+import { TextboxComponent } from './textbox';
 import { StackLayoutComponent } from './stack-layout';
 import { PanelLayoutComponent } from './panel-layout';
 import { PlainLayoutComponent } from './plain-layout';
@@ -23,6 +26,9 @@ export const BUILT_IN_COMPONENTS: Record<
 > = {
   variable: VariableComponent,
   slider: SliderComponent,
+  switch: SwitchComponent,
+  button: ButtonComponent,
+  textbox: TextboxComponent,
   'stack-layout': StackLayoutComponent,
   'panel-layout': PanelLayoutComponent,
   'panel-header': PanelHeaderComponent,

@@ -60,6 +60,14 @@ export interface FileMetadata {
 }
 
 /**
+ * System theme from external URL.
+ */
+export interface SystemTheme {
+  name: string;
+  url: string;
+}
+
+/**
  * Storage backend abstraction for a single board.
  * Bound to a specific board ID for load/save operations.
  * Uses BoardDefinition as the single format.
@@ -69,6 +77,13 @@ export interface IBoardBackend {
   save(board: BoardDefinition): Promise<void>;
 
   listResourceFolder(folder: string): Promise<FileMetadata[]>;
+
+  /**
+   * Get list of system themes from external URLs.
+   * Returns name/url pairs for populating a datalist.
+   * If not implemented, returns empty array.
+   */
+  getSystemThemes?(): Promise<SystemTheme[]>;
 }
 
 /**

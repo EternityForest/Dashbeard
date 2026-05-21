@@ -39,8 +39,7 @@ export class SliderComponent extends DashboardComponent {
         step: {
           type: 'number',
           description: 'Step size',
-          minimum: 0.0000001,
-          step: 0.0000001,
+          minimum: 0.00001,
         },
         label: {
           type: 'string',
@@ -190,11 +189,10 @@ export class SliderComponent extends DashboardComponent {
     const percentage = this.getPercentage();
 
     return html`
-    <div class="small-dashboard-widget-container">
       <label class="noselect w-full"
         >${this.label} (${this.value}${this.displayUnit})
         <input
-          class="w-full"
+          class="max-w-12rem"
           type="range"
           .value="${String(this.value)}"
           .min="${String(this.min)}"
@@ -204,7 +202,6 @@ export class SliderComponent extends DashboardComponent {
           style="--percentage: ${percentage}%; margin-top: 12px;"
         />
       </label>
-    </div>
     `;
   }
 }
