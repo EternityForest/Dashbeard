@@ -12,7 +12,7 @@ import { Port } from '../../flow/port';
 import type { PortData } from '../../flow/data-types';
 import type { SourceType } from '../../flow/port';
 
-@customElement('ds-button')
+@customElement('dashbeard-button')
 export class ButtonComponent extends DashboardComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'button',

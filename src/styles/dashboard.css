@@ -76,13 +76,13 @@ ds-stack-layout{
     width: calc(var(--component-grid-height) * 2);
 }
 
-ds-variable{
+dashbeard-variable{
     input {
       width: 100%;
     }
 }
 
-ds-slider, ds-heading, ds-switch, ds-textbox, ds-button{
+dashbeard-slider, dashbeard-heading, dashbeard-switch, dashbeard-textbox, dashbeard-button{
   display: contents;
 }
 

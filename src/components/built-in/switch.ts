@@ -12,7 +12,7 @@ import { Port } from '../../flow/port';
 import type { PortData } from '../../flow/data-types';
 import type { SourceType } from '../../flow/port';
 
-@customElement('ds-switch')
+@customElement('dashbeard-switch')
 export class SwitchComponent extends DashboardComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'switch',

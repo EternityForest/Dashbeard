@@ -3,7 +3,7 @@ import { html, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { PlainLayoutComponent } from './plain-layout';
 
-@customElement('ds-tool-bar')
+@customElement('dashbeard-tool-bar')
 export class ToolBarComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'tool-bar',

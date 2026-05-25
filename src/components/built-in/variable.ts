@@ -14,7 +14,7 @@ import { Port, PortSchema } from '../../flow/port';
 import type { PortData } from '../../flow/data-types';
 import { SourceType } from '../../flow/port';
 
-@customElement('ds-variable')
+@customElement('dashbeard-variable')
 export class VariableComponent extends DashboardComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'variable',

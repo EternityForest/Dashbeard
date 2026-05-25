@@ -8,7 +8,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { DashboardComponent } from '../dashboard-component';
 import type { ComponentTypeSchema } from '../../editor/types';
 
-@customElement('ds-heading')
+@customElement('dashbeard-heading')
 export class HeadingComponent extends DashboardComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'heading',

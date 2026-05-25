@@ -14,7 +14,7 @@ import type { SourceType } from '../../flow/port';
 /**
  * Slider component - numeric range input for selecting values within bounds.
  */
-@customElement('ds-slider')
+@customElement('dashbeard-slider')
 export class SliderComponent extends DashboardComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'slider',
