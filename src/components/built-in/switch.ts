@@ -84,7 +84,8 @@ export class SwitchComponent extends DashboardComponent {
 
   override render(): TemplateResult {
     return html`
-        <label class="noselect w-full switch-label">
+        <label class="noselect w-full switch-label"
+        style="flex-basis: fit-content;">
           <input
             type="checkbox"
             class="toggle"

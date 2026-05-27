@@ -22,17 +22,19 @@ export type FormFieldChange = (value: unknown) => void;
  * @param value Current property value
  * @param schema ConfigSchema defining the property
  * @param onChange Callback when value changes
+ * @param context Optional context (boardId, backend)
  * @returns Template result for form field
  */
 export function schemaToFormField(
   name: string,
   value: unknown,
   schema: ConfigSchema,
-  onChange: FormFieldChange
+  onChange: FormFieldChange,
+  context?: FormFieldsContext
 ): TemplateResult {
   switch (schema.type) {
     case 'string':
-      return renderStringField(name, value, schema, onChange);
+      return renderStringField(name, value, schema, onChange, context);
     case 'number':
       return renderNumberField(name, value, schema, onChange);
     case 'boolean':
@@ -57,7 +59,8 @@ function renderStringField(
   name: string,
   value: unknown,
   schema: ConfigSchema,
-  onChange: FormFieldChange
+  onChange: FormFieldChange,
+  context?: FormFieldsContext
 ): TemplateResult {
   const stringValue = String(value || '');
 
@@ -74,8 +77,8 @@ function renderStringField(
         .label="${formatName(name)}"
         .fileFilter="${fileFilter}"
         .onChange="${(path: string) => onChange(path)}"
-        module="example"
-        resource="example"
+        .boardId="${context?.boardId || ''}"
+        .backend="${context?.backend}"
       ></ds-resource-browser>
     `;
   }
@@ -277,18 +280,28 @@ function formatName(name: string): string {
 }
 
 /**
+ * Context for form fields (e.g., boardId/backend for resource browser)
+ */
+export interface FormFieldsContext {
+  boardId?: string;
+  backend?: unknown; // IBoardBackend
+}
+
+/**
  * Render multiple form fields for all properties
  * in a schema.
  *
  * @param configSchema Schema properties object
  * @param config Current config values
  * @param onChange Callback for property changes
+ * @param context Optional context (boardId, backend)
  * @returns Template result
  */
 export function schemaToFormFields(
   configSchema: ConfigSchema,
   config: Record<string, unknown>,
-  onChange: (name: string, value: unknown) => void
+  onChange: (name: string, value: unknown) => void,
+  context?: FormFieldsContext
 ): TemplateResult {
   const properties = configSchema.properties || {};
   const entries = Object.entries(properties);
@@ -302,7 +315,7 @@ export function schemaToFormFields(
   return html`
     ${entries.map(([name, schema]) =>
       schemaToFormField(name, config[name], schema, (value) =>
-        onChange(name, value)
+        onChange(name, value), context
       )
     )}
   `;

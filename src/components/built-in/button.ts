@@ -27,6 +27,21 @@ export class ButtonComponent extends DashboardComponent {
           description: 'Button label',
           default: 'Click',
         },
+        backgroundImage: {
+          type: 'string',
+          description: 'Background image URL',
+          format: 'file',
+        },
+        height: {
+          type: 'string',
+          description: 'Button height (e.g., 40px, auto)',
+          default: '',
+        },
+        width: {
+          type: 'string',
+          description: 'Button width (e.g., 100px, auto)',
+          default: '',
+        },
       },
     },
   };
@@ -34,6 +49,9 @@ export class ButtonComponent extends DashboardComponent {
   @property({ type: 'number' }) enabled = 1;
   @property() label = 'Click';
   @property({ type: 'number' }) counter = 0;
+  @property() backgroundImage = '';
+  @property() height = '';
+  @property() width = '';
 
   private targetPort: Port;
 
@@ -68,6 +86,9 @@ export class ButtonComponent extends DashboardComponent {
   public override onConfigUpdate(): void {
     const specificConfig: Record<string, unknown> = this.componentConfig.config || {};
     this.label = (specificConfig.label as string) || 'Click';
+    this.backgroundImage = (specificConfig.backgroundImage as string) || '';
+    this.height = (specificConfig.height as string) || '';
+    this.width = (specificConfig.width as string) || '';
     this.requestUpdate();
   }
 
@@ -92,10 +113,18 @@ export class ButtonComponent extends DashboardComponent {
   override render(): TemplateResult {
     const isDisabled = this.enabled < .01;
 
+    const buttonStyle = [
+      this.backgroundImage ? `background-image: url('${this.backgroundImage}')` : '',
+      this.height ? `height: ${this.height}` : '',
+      this.width ? `width: ${this.width}` : '',
+      "background-size: cover",
+    ].filter(Boolean).join('; ');
+
     return html`
         <button
           ?disabled="${isDisabled}"
           @click="${this.handleClick.bind(this)}"
+          style="${buttonStyle}"
         >
           ${this.label}
         </button>

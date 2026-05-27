@@ -448,7 +448,11 @@ export class PropertyInspector extends LitElement {
             ? schemaToFormFields(
                 this.componentSchema.configSchema,
                 this.selectedComponent.config || {},
-                (name, value) => this.handlePropertyChange(name, value)
+                (name, value) => this.handlePropertyChange(name, value),
+                {
+                  boardId: this.editorState?.board.get()?.id,
+                  backend: this.editorState?.backend,
+                }
               )
             : html` <div>No properties to edit</div> `}
 

@@ -59,6 +59,12 @@ export class ResourceBrowser extends LitElement {
   @state()
   private error = '';
 
+  @state()
+  private useExternalUrl = false;
+
+  @state()
+  private externalUrlInput = '';
+
   static override styles = css`
     :host {
       display: block;
@@ -270,8 +276,7 @@ export class ResourceBrowser extends LitElement {
               type="text"
               .value="${this.value}"
               @change="${(e: Event) => this.onInputChange(e)}"
-              placeholder="Select a resource..."
-              readonly
+              placeholder="Select a resource or enter URL..."
             />
             <button @click="${() => this.openDialog()}">
               Browse
@@ -296,13 +301,34 @@ export class ResourceBrowser extends LitElement {
           </div>
 
           <div class="dialog-content">
+            <!-- Tab headers -->
+            <div class="tabs" style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+              <button
+                class="tab-btn ${!this.useExternalUrl ? 'active' : ''}"
+                style="padding: 6px 12px; background: ${!this.useExternalUrl ? '#0066cc' : '#f0f0f0'}; color: ${!this.useExternalUrl ? 'white' : '#333'}; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: 500;"
+                @click="${() => this.useExternalUrl = false}"
+              >
+                Browse Files
+              </button>
+              <button
+                class="tab-btn ${this.useExternalUrl ? 'active' : ''}"
+                style="padding: 6px 12px; background: ${this.useExternalUrl ? '#0066cc' : '#f0f0f0'}; color: ${this.useExternalUrl ? 'white' : '#333'}; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: 500;"
+                @click="${() => { this.useExternalUrl = true; this.externalUrlInput = this.value; }}"
+              >
+                External URL
+              </button>
+            </div>
+
             ${this.error ? html`<div class="error">${this.error}</div>` : ''}
-            ${this.renderBrowseTab()}
+            ${this.useExternalUrl ? this.renderExternalUrlTab() : this.renderBrowseTab()}
           </div>
 
           <div class="dialog-footer">
             <button class="btn-secondary" @click="${() => this.clearSelection()}">
               Clear
+            </button>
+            <button @click="${() => this.applySelection()}">
+              ${this.useExternalUrl ? 'Apply URL' : 'Select'}
             </button>
             <button class="btn-secondary" @click="${() => this.closeDialog()}">
               Cancel
@@ -362,10 +388,32 @@ export class ResourceBrowser extends LitElement {
     `;
   }
 
+  private renderExternalUrlTab(): TemplateResult {
+    return html`
+      <div style="padding: 12px 0;">
+        <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333;">
+          Enter an external URL for the resource
+        </label>
+        <input
+          type="text"
+          class="external-url-input"
+          style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 13px; box-sizing: border-box;"
+          .value="${this.externalUrlInput}"
+          @input="${(e: Event) => this.externalUrlInput = (e.target as HTMLInputElement).value}"
+          placeholder="https://example.com/image.png"
+        />
+        <div style="margin-top: 8px; font-size: 11px; color: #666;">
+          Supports http://, https://, and data: URLs
+        </div>
+      </div>
+    `;
+  }
+
   private async openDialog(): Promise<void> {
     this.showDialog = true;
     this.loading = true;
     this.error = '';
+    this.externalUrlInput = this.value;
 
     try {
       await this.loadFolder('/');
@@ -378,6 +426,16 @@ export class ResourceBrowser extends LitElement {
     this.showDialog = false;
   }
 
+  private applySelection(): void {
+    if (this.useExternalUrl && this.externalUrlInput) {
+      this.value = this.externalUrlInput;
+      if (this.onChange) {
+        this.onChange(this.externalUrlInput);
+      }
+    }
+    this.closeDialog();
+  }
+
   private async loadFolder(folder: string): Promise<void> {
     if (!this.boardId || !this.backend) {
       this.error = 'No board or backend configured';
@@ -386,7 +444,7 @@ export class ResourceBrowser extends LitElement {
 
     try {
       this.loading = true;
-      const items = await this.backend.listResourceFolder(this.boardId, folder);
+      const items = await this.backend.listResourceFolder(folder);
 
       // Filter by file extension if specified
       let filtered = items;

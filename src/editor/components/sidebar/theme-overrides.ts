@@ -16,57 +16,6 @@ export class ThemeOverrides extends LitElement {
    */
   @property({ type: Object }) editorState?: EditorState;
 
-  static override styles = css`
-    .section {
-      padding: 12px;
-    }
-
-    .section-title {
-      font-weight: 600;
-      font-size: 13px;
-      color: #333;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .variables-container {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .variable-group {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 8px;
-      background: #fafafa;
-    }
-
-    .variable-group-title {
-      font-size: 11px;
-      font-weight: 600;
-      color: #666;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-    }
-
-    .divider {
-      height: 1px;
-      background: #eee;
-      margin: 12px 0;
-    }
-
-    .info {
-      font-size: 11px;
-      color: #999;
-      padding: 8px;
-      background: #f9f9f9;
-      border-radius: 3px;
-      border-left: 2px solid #ddd;
-    }
-  `;
 
   protected createRenderRoot(): HTMLElement | DocumentFragment {
     return this; // Renders to the element's light DOM
