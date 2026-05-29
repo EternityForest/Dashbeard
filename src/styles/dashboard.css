@@ -93,6 +93,8 @@ dashbeard-slider, dashbeard-heading, dashbeard-switch, dashbeard-textbox, dashbe
     margin-bottom: var(--gap);
   }
 }
+
+
 /*Put on a label element with label on left and control on right*/
 .one-line-control{
   display: flex;

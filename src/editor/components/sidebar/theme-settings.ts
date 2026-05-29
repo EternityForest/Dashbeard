@@ -45,10 +45,7 @@ export class ThemeSettings extends LitElement {
     }
 
     const currentTheme = this.editorState.board.get()?.cssTheme || '';
-    // URL takes precedence over file - check if current theme is a URL
-    const isUrl = currentTheme.startsWith('http://') || currentTheme.startsWith('https://') || currentTheme.startsWith('data:');
-    const currentUrl = isUrl ? currentTheme : '';
-    const currentFile = isUrl ? '' : currentTheme;
+
 
     return html`
       <div class="section">
@@ -56,12 +53,11 @@ export class ThemeSettings extends LitElement {
 
         <!-- External URL Theme -->
         <div class="custom-theme">
-          <div class="custom-theme-label">External URL (takes precedence)</div>
+          <div class="custom-theme-label">Use System Theme</div>
           <input
             type="text"
             class="url-input"
             placeholder="https://example.com/theme.css"
-            .value="${currentUrl}"
             list="system-themes"
             @change="${(e: Event) => this.setThemeUrl((e.target as HTMLInputElement).value)}"
           />
@@ -78,7 +74,7 @@ export class ThemeSettings extends LitElement {
         <div class="custom-theme">
           <div class="custom-theme-label">Custom CSS File</div>
           <ds-resource-browser
-            .value="${currentFile}"
+            .value="${currentTheme}"
             .label="CSS File"
             .fileFilter="\\.css$"
             .onChange="${(path: string) => this.setThemeFile(path)}"

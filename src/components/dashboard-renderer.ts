@@ -46,6 +46,9 @@ export class DashboardRenderer extends LitElement {
     this.isLoaded = false;
     this.board = boardDef;
 
+    // Apply CSS theme from board definition
+    this.cssTheme.set(boardDef.cssTheme || '');
+
     // Apply theme variable overrides
     this.applyThemeVariables(boardDef);
 
