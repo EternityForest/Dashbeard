@@ -19,7 +19,7 @@ ds-dashboard-editor{
     }
 
     .editor-sidebar {
-      width: 300px;
+      width: 24rem;
       border-right: 1px solid;
       overflow-y: auto;
       display: flex;

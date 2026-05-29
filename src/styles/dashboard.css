@@ -89,6 +89,7 @@ dashbeard-slider, dashbeard-heading, dashbeard-switch, dashbeard-textbox, dashbe
 .panel-layout{
   padding: 0px;
   flex-wrap: wrap;
+  overflow: hidden;;
 }
 
 .panel-header{
@@ -96,3 +97,6 @@ dashbeard-slider, dashbeard-heading, dashbeard-switch, dashbeard-textbox, dashbe
   padding: 0px;
 }
 
+ds-panel-body{
+  overflow: auto;;
+}

@@ -175,6 +175,53 @@ export class SliderComponent extends DashboardComponent {
   }
 
   /**
+   * Calculate decimal places needed based on max value and step size.
+   */
+  private getDecimalPlaces(): number {
+    const max = parseFloat(this.max);
+    const step = parseFloat(this.step);
+
+    if (!max || !step || step <= 0) {
+      return 0;
+    }
+
+    // Calculate decimals needed for step precision
+    const stepStr = step.toString();
+    const stepDecimals = stepStr.includes('.') ? stepStr.split('.')[1].length : 0;
+
+    // Calculate decimals needed for max value
+    const maxStr = max.toString();
+    const maxDecimals = maxStr.includes('.') ? maxStr.split('.')[1].length : 0;
+
+    // Use the larger of the two, capped at 10
+    return Math.min(Math.max(stepDecimals, maxDecimals), 10);
+  }
+
+  /**
+   * Format value with appropriate decimal places.
+   */
+  private formatValue(): string {
+    const decimals = this.getDecimalPlaces();
+    const max = parseFloat(this.max);
+
+    // Calculate integer digit count from max value
+    const intDigits = max > 0 ? Math.ceil(Math.log10(max + 1)) : 1;
+
+    let formatted: string;
+    if (decimals > 0) {
+      formatted = this.value.toFixed(decimals);
+    } else {
+      formatted = String(Math.floor(this.value));
+    }
+
+    // Pad integer part with leading zeros
+    const [intPart, decPart] = formatted.split('.');
+    const paddedInt = intPart.padStart(intDigits, '0');
+
+    return decPart ? `${paddedInt}.${decPart}` : paddedInt;
+  }
+
+  /**
    * Calculate percentage for visual fill effect.
    */
   private getPercentage(): number {
@@ -190,7 +237,7 @@ export class SliderComponent extends DashboardComponent {
 
     return html`
       <label class="noselect"
-        >${this.label} (${this.value}${this.displayUnit})
+        >${this.label} (${this.formatValue()}${this.displayUnit})
         <input
           class="max-w-12rem display-cont"
           type="range"
