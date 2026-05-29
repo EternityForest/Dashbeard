@@ -3,10 +3,10 @@ import { html, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { PlainLayoutComponent } from './plain-layout';
 
-@customElement('ds-form-layout')
+@customElement('ds-stacked-form-layout')
 export class formLayoutComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
-    name: 'form-layout',
+    name: 'stacked-form-layout',
     displayName: 'form Layout',
     category: 'layout',
     description: 'Form container for input widgets',

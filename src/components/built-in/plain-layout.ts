@@ -27,7 +27,6 @@ export class PlainLayoutComponent extends DashboardComponent {
 
   override updated(_changedProperties: Map<string, unknown>) {
     const childrenTarget = this.renderRoot
-      ?.querySelector(`#component-${this.id}`)
       ?.querySelector('widget-children');
 
     if (!childrenTarget) {
@@ -39,6 +38,7 @@ export class PlainLayoutComponent extends DashboardComponent {
     (this.componentConfig?.children || []).forEach((cnf) => {
       const child = this.allComponents.get(cnf.id);
       if (child) {
+        // todo i dont think this removes the actual root
         const existing = childrenTarget?.querySelector(`#component-${cnf.id}`);
         if (existing) {
           existing.remove();

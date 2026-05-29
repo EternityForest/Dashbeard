@@ -85,11 +85,10 @@ export class TextboxComponent extends DashboardComponent {
 
   override render(): TemplateResult {
     return html`
-        <label class="noselect">
+        <label class="one-line-control">
           ${this.label}
           <input
             type="text"
-            class="w-full"
             .value="${this.value}"
             .placeholder="${this.placeholder}"
             @change="${this.handleInput.bind(this)}"

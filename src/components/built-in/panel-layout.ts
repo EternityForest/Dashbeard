@@ -35,16 +35,25 @@ export class PanelLayoutComponent extends PlainLayoutComponent {
     configSchema: {
       type: 'object',
       properties: {
-        "expand":{
-          "type": "number",
-          "default": 1
+        expand: {
+          type: 'number',
+          default: 1,
         },
 
-        "max-width":{
-          "type": "string",
-          "default": "36rem"
-        }
+        'max-width': {
+          type: 'string',
+          default: '36rem',
+        },
 
+        height: {
+          type: 'string',
+          default: '',
+        },
+
+        'max-height': {
+          type: 'string',
+          default: '',
+        },
       },
     },
   };
@@ -62,15 +71,17 @@ export class PanelLayoutComponent extends PlainLayoutComponent {
    * Render the flex layout container with child placeholders.
    */
   override render(): TemplateResult {
+    const config = this?.componentConfig?.config || {};
+    const height = config['height'] || '';
+    const maxHeight = config['max-height'] || '';
+    const maxWidth = config['max-width'] || '36rem';
+    const expand = config['expand'] || 1;
+
     return html`
-      <div id="component-${this.id}"
-      style="max-width: ${this?.componentConfig?.config!['max-width'] || "36rem"};";
-      flex-grow: ${this?.componentConfig?.config!['expand'] || 1};
-      >
-        <widget-children
-          class="panel-layout card border flex-col margin"
-        ></widget-children>
-      </div>
+      <widget-children
+        style="max-width: ${maxWidth}; height: ${height}; max-height: ${maxHeight}; flex-grow: ${expand}; display: flex; flex-direction: column;"
+        class="panel-layout card border flex-col margin"
+      ></widget-children>
     `;
   }
 

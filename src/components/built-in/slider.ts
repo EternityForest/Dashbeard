@@ -236,8 +236,8 @@ export class SliderComponent extends DashboardComponent {
     const percentage = this.getPercentage();
 
     return html`
-      <label class="noselect"
-        >${this.label} (${this.formatValue()}${this.displayUnit})
+      <label class="one-line-control"
+        ><span>${this.label} (${this.formatValue()}${this.displayUnit})</span>
         <input
           class="max-w-12rem display-cont"
           type="range"

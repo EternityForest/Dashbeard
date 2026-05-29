@@ -86,17 +86,51 @@ dashbeard-slider, dashbeard-heading, dashbeard-switch, dashbeard-textbox, dashbe
   display: contents;
 }
 
+.stacked-form{
+  & .one-line-control{
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: var(--gap);
+  }
+}
+/*Put on a label element with label on left and control on right*/
+.one-line-control{
+  display: flex;
+  gap: var(--gap);
+  justify-content: space-between; 
+  max-width: 24rem;
+  flex-grow: 1;
+  align-self: stretch;
+  width: min(100%, 95vw);
+  user-select: none;
+  flex-wrap: wrap;
+  padding: var(--padding);
+
+  & input, & select {
+    flex-grow: 1;
+    flex-shrink: 1;
+    max-width: 12rem;
+  }
+}
+
 .panel-layout{
   padding: 0px;
   flex-wrap: wrap;
-  overflow: hidden;;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .panel-header{
   margin: 0px;
   padding: 0px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  flex-basis: fit-content;
 }
 
 ds-panel-body{
-  overflow: auto;;
+  overflow: auto;
+  flex-grow: 1;
 }
+

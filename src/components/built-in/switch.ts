@@ -43,7 +43,8 @@ export class SwitchComponent extends DashboardComponent {
 
     port.addDataHandler(this.onPortData.bind(this));
 
-    this.value = (parseInt(config?.config?.defaultValue as string || '', 10)) ?? 0;
+    this.value =
+      parseInt((config?.config?.defaultValue as string) || '', 10) ?? 0;
 
     this.onConfigUpdate();
 
@@ -62,7 +63,8 @@ export class SwitchComponent extends DashboardComponent {
   }
 
   public override onConfigUpdate(): void {
-    const specificConfig: Record<string, unknown> = this.componentConfig.config || {};
+    const specificConfig: Record<string, unknown> =
+      this.componentConfig.config || {};
     this.label = (specificConfig.label as string) || 'Switch';
     this.requestUpdate();
   }
@@ -76,7 +78,9 @@ export class SwitchComponent extends DashboardComponent {
   }
 
   protected override updated(_changedProperties: PropertyValues): void {
-    const checkbox = this.renderRoot?.querySelector('.toggle') as HTMLInputElement;
+    const checkbox = this.renderRoot?.querySelector(
+      '.toggle'
+    ) as HTMLInputElement;
     if (checkbox) {
       checkbox.checked = parseFloat(this.value) > 0;
     }
@@ -84,16 +88,17 @@ export class SwitchComponent extends DashboardComponent {
 
   override render(): TemplateResult {
     return html`
-        <label class="noselect w-full switch-label"
-        style="flex-basis: fit-content;">
-          <input
-            type="checkbox"
-            class="toggle"
-            ?checked="${parseFloat(this.value) > 0}"
-            @change="${this.handleChange.bind(this)}"
-          />
-          <span>${this.label}</span>
-        </label>
+      <label
+       class="one-line-control"
+      >
+        <span>${this.label}</span>
+        <input
+          type="checkbox"
+          class="toggle"
+          ?checked="${parseFloat(this.value) > 0}"
+          @change="${this.handleChange.bind(this)}"
+        />
+      </label>
     `;
   }
 }
