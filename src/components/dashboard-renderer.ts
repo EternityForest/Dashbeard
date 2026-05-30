@@ -120,7 +120,13 @@ export class DashboardRenderer extends LitElement {
       return;
     }
 
-    const overrides = boardDef.settings?.themeOverrides;
+    if(!boardDef){
+      return;
+    }
+    let overrides = boardDef.settings?.themeOverrides;
+    if(!overrides){
+      overrides = {};
+    }
 
     // Build CSS custom property declarations
     let cssText = '';

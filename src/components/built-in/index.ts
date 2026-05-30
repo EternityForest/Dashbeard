@@ -17,6 +17,10 @@ import { PanelHeaderComponent } from './panel-header';
 import { HeadingComponent } from './section-heading';
 import { formLayoutComponent as FormLayoutComponent } from './stacked-form-layout';
 import { ToolBarComponent } from './tool-bar';
+import { DialogComponent } from './dialog';
+import { LayerSetComponent } from './layer-set';
+import { ConditionalComponent } from './conditional';
+import { ImageComponent } from './image';
 /**
  * Registry mapping component type names to their constructors.
  */
@@ -37,5 +41,10 @@ export const BUILT_IN_COMPONENTS: Record<
   'stacked-form-layout': FormLayoutComponent,
   'tool-bar': ToolBarComponent,
 
-  'heading':HeadingComponent
+  'heading':HeadingComponent,
+
+  'dialog': DialogComponent,
+  'layer-set': LayerSetComponent,
+  'conditional': ConditionalComponent,
+  'image': ImageComponent,
 };

@@ -38,11 +38,6 @@ export class PlainLayoutComponent extends DashboardComponent {
     (this.componentConfig?.children || []).forEach((cnf) => {
       const child = this.allComponents.get(cnf.id);
       if (child) {
-        // todo i dont think this removes the actual root
-        const existing = childrenTarget?.querySelector(`#component-${cnf.id}`);
-        if (existing) {
-          existing.remove();
-        }
         childrenTarget?.appendChild(child);
       }
     });

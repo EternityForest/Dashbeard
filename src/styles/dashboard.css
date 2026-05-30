@@ -131,8 +131,33 @@ dashbeard-slider, dashbeard-heading, dashbeard-switch, dashbeard-textbox, dashbe
   flex-basis: fit-content;
 }
 
+ds-panel-header{
+  flex-grow: 0 !important;
+}
+
 ds-panel-body{
   overflow: auto;
   flex-grow: 1;
+}
+
+dialog-inner-popover{
+    background: none;
+    overflow: auto;
+    border: none;
+    backdrop-filter: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+.layer-set-children {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.layer-set-children > * {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
 }
 
