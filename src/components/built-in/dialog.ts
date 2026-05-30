@@ -209,18 +209,34 @@ export class DialogComponent extends PlainLayoutComponent {
 
 
   override render(): TemplateResult {
-    const alignStyles = [
-      this.horizontalAlign === 'left'
-        ? 'justify-items: start'
-        : this.horizontalAlign === 'right'
-          ? 'justify-items: end'
-          : 'justify-items: center',
-      this.verticalAlign === 'top'
-        ? 'align-items: start'
-        : this.verticalAlign === 'bottom'
-          ? 'align-items: end'
-          : 'align-items: center',
-    ].join('; ');
+    // Position the popover itself using fixed positioning with top/left
+    let topPos = '';
+    let leftPos = '';
+    let transform = '';
+
+    if (this.verticalAlign === 'top') {
+      topPos = 'top: 20px';
+    } else if (this.verticalAlign === 'bottom') {
+      topPos = 'bottom: 20px';
+    } else {
+      topPos = 'top: 50%';
+      transform = 'translateY(-50%)';
+    }
+
+    if (this.horizontalAlign === 'left') {
+      leftPos = 'left: 20px';
+    } else if (this.horizontalAlign === 'right') {
+      leftPos = 'right: 20px';
+    } else {
+      leftPos = 'left: 50%';
+      transform = transform 
+        ? 'translate(-50%, -50%)' 
+        : 'translateX(-50%)';
+    }
+
+    transform = transform ? `transform: ${transform};` : '';
+
+    const popoverPosition = [topPos, leftPos, transform].filter(Boolean).join('; ');
 
     return html`
       ${this.showButton
@@ -238,7 +254,7 @@ export class DialogComponent extends PlainLayoutComponent {
         popover
         class="dialog-inner-popover"
         id="dialog-${this.id}"
-        style="${alignStyles}"
+        style="${popoverPosition}"
       >
         <widget-children></widget-children>
       </div>

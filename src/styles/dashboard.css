@@ -140,7 +140,7 @@ ds-panel-body{
   flex-grow: 1;
 }
 
-dialog-inner-popover{
+.dialog-inner-popover:not(.specificity){
     background: none;
     overflow: auto;
     border: none;
