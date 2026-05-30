@@ -49,8 +49,7 @@ export class DashboardRenderer extends LitElement {
     // Apply CSS theme from board definition
     this.cssTheme.set(boardDef.cssTheme || '');
 
-    // Apply theme variable overrides
-    this.applyThemeVariables(boardDef);
+    // Theme variables will be applied in updated() after render
 
     // Load the board
     await this.runtime.loadBoard(boardDef);
@@ -95,50 +94,84 @@ export class DashboardRenderer extends LitElement {
     }
 
     const boarddef = this.runtime.getBoard();
-    if (boarddef) {
-      this.applyThemeVariables(boarddef);
-    }
+  
 
     // Detach from DOM (preserves component objects and state)
     container.replaceChildren();
 
     // Reattach to DOM
-    container.appendChild(this.runtime.rootComponent);
-  }
+    container.appendChild(this.runtime.rootComponent);  
+    
+    if (boarddef) {
+      this.applyThemeVariables(boarddef);
+    }
 
- 
+  }
 
   /**
    * Apply CSS variable overrides from board settings.
    * Creates or updates a style element with custom properties.
+   * Called after render completes to ensure renderRoot is available.
    *
    * @param boardDef Board definition containing theme overrides
    */
   private applyThemeVariables(boardDef: BoardDefinition): void {
-    const overrides = boardDef.settings?.themeOverrides;
-    if (!overrides) {
+    if (!this.renderRoot) {
       return;
     }
 
+    const overrides = boardDef.settings?.themeOverrides;
+
     // Build CSS custom property declarations
-    const declarations = Object.entries(overrides)
-      .map(([name, value]) => `${name}: ${value};`)
-      .join('\n');
+    let cssText = '';
+    if (overrides) {
+      const declarations = Object.entries(overrides)
+        .map(([name, value]) => `${name}: ${value};`)
+        .join('\n');
+      cssText = `:root { ${declarations} }`;
+    }
 
-    const cssText = `:root { ${declarations} }`;
-
-    // Update or create style element
-    let styleElement = this.renderRoot?.querySelector(
+    // Get or create style element
+    let styleElement = this.renderRoot.querySelector(
       '#dashboard-theme-variables'
     ) as HTMLStyleElement | null;
 
     if (!styleElement) {
       styleElement = document.createElement('style');
       styleElement.id = 'dashboard-theme-variables';
-      this.renderRoot?.insertBefore(styleElement, this.renderRoot.firstChild);
+      // Insert as last child of dashboard div so it comes after the external CSS link
+      // This ensures CSS variable overrides take precedence in cascade
+      const dashboardDiv = this.renderRoot.querySelector('.dashboard');
+      if (dashboardDiv) {
+        dashboardDiv.appendChild(styleElement);
+      } else {
+        this.renderRoot.appendChild(styleElement);
+      }
     }
 
     styleElement.textContent = cssText;
+  }
+
+
+  /**
+   * Called after each update.
+   * Ensures theme variables are applied after render completes.
+   */
+  updated(changedProperties: Map<string, unknown>): void {
+
+    const styleElement = this.renderRoot.querySelector(
+      '#dashboard-theme-variables'
+    )
+
+    if ((styleElement==null)||(changedProperties.has('board') && this.board)) {
+      // If dashboard element doesn't exist yet, defer to next microtask
+      // This handles the case where loadBoard is called before renderer is attached to DOM
+      if (!this.renderRoot?.querySelector('.dashboard')) {
+        queueMicrotask(() => this.applyThemeVariables(this.board!));
+      } else {
+        this.applyThemeVariables(this.board);
+      }
+    }
   }
 
   /**

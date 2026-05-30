@@ -21,6 +21,11 @@ export class ThemeSettings extends LitElement {
    */
   @state() private systemThemes: SystemTheme[] = [];
 
+  /**
+   * Current input value for external URL (before clicking Set).
+   */
+  @state() private urlInputValue = '';
+
   connectedCallback(): void {
     super.connectedCallback();
     this.loadSystemThemes();
@@ -45,7 +50,9 @@ export class ThemeSettings extends LitElement {
     }
 
     const currentTheme = this.editorState.board.get()?.cssTheme || '';
-
+    // URL takes precedence over file - check if current theme is a URL
+    const isUrl = currentTheme.startsWith('http://') || currentTheme.startsWith('https://') || currentTheme.startsWith('data:');
+    const currentUrl = isUrl ? currentTheme : '';
 
     return html`
       <div class="section">
@@ -54,13 +61,17 @@ export class ThemeSettings extends LitElement {
         <!-- External URL Theme -->
         <div class="custom-theme">
           <div class="custom-theme-label">Use System Theme</div>
-          <input
-            type="text"
-            class="url-input"
-            placeholder="https://example.com/theme.css"
-            list="system-themes"
-            @change="${(e: Event) => this.setThemeUrl((e.target as HTMLInputElement).value)}"
-          />
+          <div class="url-input-row">
+            <input
+              type="text"
+              class="url-input"
+              placeholder="https://example.com/theme.css"
+              .value="${this.urlInputValue || currentUrl}"
+              list="system-themes"
+              @input="${(e: Event) => this.urlInputValue = (e.target as HTMLInputElement).value}"
+            />
+            <button class="set-button" @click="${() => this.setThemeUrl(this.urlInputValue || currentUrl)}">Set</button>
+          </div>
           <datalist id="system-themes">
             ${this.systemThemes.map(
               (theme) => html`<option value="${theme.url}">${theme.name}</option>`
@@ -97,6 +108,28 @@ export class ThemeSettings extends LitElement {
     this.editorState.setCSSTheme(themePath);
     this.requestUpdate();
   }
+
+  static styles = css`
+    .url-input-row {
+      display: flex;
+      gap: 8px;
+    }
+    .url-input {
+      flex: 1;
+    }
+    .set-button {
+      padding: 6px 16px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .set-button:hover {
+      background: #2563eb;
+    }
+  `;
 }
 
 declare global {
