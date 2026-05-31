@@ -80,7 +80,7 @@ export class PanelLayoutComponent extends PlainLayoutComponent {
     return html`
       <widget-children
         style="max-width: ${maxWidth}; height: ${height}; max-height: ${maxHeight}; flex-grow: ${expand}; display: flex; flex-direction: column;"
-        class="panel-layout card border flex-col margin"
+        class="panel-layout card border flex-col margin paper"
       ></widget-children>
     `;
   }
