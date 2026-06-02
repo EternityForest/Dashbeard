@@ -30,7 +30,8 @@ export class PanelLayoutComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'panel-layout',
     displayName: 'Panel Layout',
-    category: 'layout',
+    category: 'layout',    acceptsChildren: true,
+
     description: 'Container for arranging children with flexbox',
     configSchema: {
       type: 'object',

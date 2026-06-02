@@ -8,7 +8,8 @@ export class PanelHeaderComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'panel-header',
     displayName: 'Panel Header',
-    category: 'layout',
+    category: 'spares',    
+    acceptsChildren: true,
     description: 'Header for panel-layout',
     configSchema: {
       type: 'object',

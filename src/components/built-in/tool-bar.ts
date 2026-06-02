@@ -8,7 +8,8 @@ export class ToolBarComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'tool-bar',
     displayName: 'Plain Layout',
-    category: 'layout',
+    category: 'layout',    acceptsChildren: true,
+
     description: 'Container for arranging children with flexbox',
     configSchema: {
       type: 'object',

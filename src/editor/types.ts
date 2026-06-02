@@ -45,7 +45,8 @@ export interface ConfigSchema {
 export interface ComponentTypeSchema {
   name: string;
   displayName: string;
-  category: 'layout' | 'text' | 'input' | 'display' | 'logic' | 'data';
+  category: 'layout' | 'text' | 'input' | 'display' | 'logic' | 'data' | 'spares';
+  acceptsChildren?: boolean;
   description?: string;
   icon?: string;
   configSchema: ConfigSchema;

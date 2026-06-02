@@ -68,6 +68,12 @@ export class DashboardEditor extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
 
+    // Read dashboard-mode from URL params to control sidebar visibility
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('dashboard-mode');
+    // Hide sidebar in view mode, show in edit mode or when not specified
+    this.showSidebar = mode !== 'view';
+
     // Subscribe to board changes
     this.editorState.board.subscribe((board) => {
       this.requestUpdate();

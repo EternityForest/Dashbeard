@@ -374,8 +374,8 @@ export class BoardRuntime {
       oldComponent.componentConfig.type
     );
 
-    if (oldComponentClass?.typeSchema.category == 'layout') {
-      if (!(cls?.typeSchema.category == 'layout')) {
+    if (oldComponentClass?.typeSchema.acceptsChildren) {
+      if (!(cls?.typeSchema.acceptsChildren)) {
         throw new Error(`Cannot change layout type to non-layout`);
       }
     }

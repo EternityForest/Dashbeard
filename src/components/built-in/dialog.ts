@@ -31,7 +31,8 @@ export class DialogComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'dialog',
     displayName: 'Dialog',
-    category: 'layout',
+    category: 'layout',   
+    acceptsChildren: true,
     description:
       'A popover dialog that stays open or auto-closes after duration',
     configSchema: {

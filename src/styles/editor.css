@@ -286,6 +286,20 @@ ds-editor-property-inspector {
       color: #fff;
       border-color: #1565c0;
     }
+
+    .category-group {
+      margin-bottom: 8px;
+    }
+
+    .category-header {
+      font-size: 10px;
+      color: #888;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      padding-bottom: 2px;
+      border-bottom: 1px solid #eee;
+    }
 }
 
 ds-editor-bindings {

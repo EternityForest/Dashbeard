@@ -293,7 +293,7 @@ export class EditorState {
     const cls = this.editorComponent.renderer?.runtime.componentClasses.get(
       component.type
     );
-    return cls?.typeSchema.category === 'layout';
+    return cls?.typeSchema.acceptsChildren || false;
   }
 
   /**

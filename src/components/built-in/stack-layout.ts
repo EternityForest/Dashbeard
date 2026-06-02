@@ -14,7 +14,8 @@ export class StackLayoutComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'stack-layout',
     displayName: 'Stack Layout',
-    category: 'layout',
+    category: 'layout',    acceptsChildren: true,
+
     description: 'Container for arranging children with flexbox',
     configSchema: {
       type: 'object',

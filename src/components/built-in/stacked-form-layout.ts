@@ -8,7 +8,8 @@ export class formLayoutComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'stacked-form-layout',
     displayName: 'form Layout',
-    category: 'layout',
+    category: 'layout',    acceptsChildren: true,
+
     description: 'Form container for input widgets',
     configSchema: {
       type: 'object',

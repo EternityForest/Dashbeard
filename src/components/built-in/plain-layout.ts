@@ -8,7 +8,8 @@ export class PlainLayoutComponent extends DashboardComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'plain-layout',
     displayName: 'Plain Layout',
-    category: 'layout',
+    category: 'layout',    acceptsChildren: true,
+
     description: 'Container for arranging children with flexbox',
     configSchema: {
       type: 'object',

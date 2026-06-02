@@ -26,6 +26,7 @@ export class DashboardComponent extends LitElement {
     name: '',
     displayName: 'Base Component',
     category: 'data',
+    acceptsChildren: false,
     configSchema: {
       type: 'object',
       properties: {},

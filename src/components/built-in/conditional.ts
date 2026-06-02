@@ -16,7 +16,8 @@ export class ConditionalComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'conditional',
     displayName: 'Conditional',
-    category: 'flow',
+    category: 'layout',    acceptsChildren: true,
+
     description: 'Show contents only when input port > 1 or force visible',
     configSchema: {
       type: 'object',

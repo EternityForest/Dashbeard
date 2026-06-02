@@ -12,7 +12,8 @@ export class LayerSetComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'layer-set',
     displayName: 'Layer Set',
-    category: 'layout',
+    category: 'layout',    acceptsChildren: true,
+
     description: 'Stack all children using CSS grid',
     configSchema: {
       type: 'object',

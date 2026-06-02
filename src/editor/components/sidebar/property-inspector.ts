@@ -308,6 +308,33 @@ export class PropertyInspector extends LitElement {
   }
 
   /**
+   * Get available component types grouped by category.
+   */
+  private getTypesByCategory(): Map<string, string[]> {
+    const runtime = this.editorState?.editorComponent.renderer.runtime;
+    if (!runtime) return new Map();
+
+    const grouped = new Map<string, string[]>();
+
+    for (const type of this.availableTypes) {
+      const cls = runtime.componentClasses.get(type);
+      const category = cls?.typeSchema.category || 'data';
+      if (!grouped.has(category)) {
+        grouped.set(category, []);
+      }
+      grouped.get(category)!.push(type);
+    }
+
+    // Sort types within each category
+    for (const types of grouped.values()) {
+      types.sort();
+    }
+
+    // Return sorted by category name
+    return new Map([...grouped.entries()].sort());
+  }
+
+  /**
    * Handle parent component change.
    */
   private handleParentChange(newParentId: string): void {
@@ -501,18 +528,33 @@ export class PropertyInspector extends LitElement {
                     >
                       Add Child
                     </div>
-                    <div class="type-selector">
-                      ${this.availableTypes.map(
-                        (type) =>
-                          html`<button
-                            class="type-button"
-                            @click="${() => this.handleAddChild(type)}"
-                            title="Add ${type} child"
-                          >
-                            + ${type}
-                          </button>`
-                      )}
-                    </div>
+                    ${((
+                        categories: Map<string, string[]>
+                      ) =>
+                        Array.from(categories.entries()).map(
+                          ([category, types]) =>
+                            html`
+                              <div class="category-group">
+                                <div class="category-header">
+                                  ${category.toUpperCase()}
+                                </div>
+                                <div class="type-selector">
+                                  ${types.map(
+                                    (type) => html`
+                                      <button
+                                        class="type-button"
+                                        @click="${() =>
+                                          this.handleAddChild(type)}"
+                                        title="Add ${type} child"
+                                      >
+                                        + ${type}
+                                      </button>
+                                    `
+                                  )}
+                                </div>
+                              </div>
+                            `
+                        ))(this.getTypesByCategory())}
                   </div>
                 `
               : ''}

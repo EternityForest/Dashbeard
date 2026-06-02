@@ -8,7 +8,8 @@ export class PanelBodyComponent extends PlainLayoutComponent {
   static readonly typeSchema: ComponentTypeSchema = {
     name: 'panel-body',
     displayName: 'Panel Body',
-    category: 'layout',
+    category: 'spares',    
+    acceptsChildren: true,
     description: 'Container for arranging children with flexbox',
     configSchema: {
       type: 'object',
